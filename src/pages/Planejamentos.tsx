@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { Plus, Pencil, Trash2, Target, Calendar, TrendingUp, PiggyBank, CheckCircle } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useFinanceStore } from '../store/useFinanceStore'
@@ -10,10 +10,10 @@ import { Button } from '../components/ui/Button'
 import type { Planejamento, TipoPlano, FonteRenda } from '../types'
 
 const tipoOpcoes: { value: TipoPlano; label: string; icone: string }[] = [
-  { value: 'reserva_emergencia', label: 'Reserva de Emergência', icone: 'ðŸ›¡ï¸' },
+  { value: 'reserva_emergencia', label: 'Reserva de Emergência', icone: '🛡️' },
   { value: 'compra_carro', label: 'Compra de Carro', icone: '🚗' },
-  { value: 'viagem', label: 'Viagem', icone: 'âœˆï¸' },
-  { value: 'aposentadoria', label: 'Aposentadoria', icone: 'ðŸ–ï¸' },
+  { value: 'viagem', label: 'Viagem', icone: '✈️' },
+  { value: 'aposentadoria', label: 'Aposentadoria', icone: '🏖️' },
   { value: 'outros', label: 'Outros', icone: '🎯' },
 ]
 
