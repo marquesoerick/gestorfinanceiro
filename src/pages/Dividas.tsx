@@ -35,7 +35,7 @@ export function Dividas() {
   const parcelasMes = useMemo(() => dividas.filter(d => d.status === 'ativa').reduce((s, d) => s + d.valorParcela, 0), [dividas])
   const quitadas = useMemo(() => dividas.filter(d => d.status === 'quitada').length, [dividas])
 
-  // Preview das parcelas em Contas a Pagar ao criar nova dÃ­vida
+  // Preview das parcelas em Contas a Pagar ao criar nova dívida
   const parcelasPreview = useMemo(() => {
     if (!form.descricao || !form.valorParcela || form.valorParcela <= 0 || !form.dataInicio || form.parcelas <= 0) return []
     const restantes = form.parcelas - (form.parcelaAtual - 1)
@@ -85,7 +85,7 @@ export function Dividas() {
             status: 'pendente',
             grupo: 'outros',
             fonte: form.fonte,
-            categoria: 'DÃ­vida',
+            categoria: 'Dívida',
             prioridade: 'alta',
             origem: 'divida',
             mesReferencia: p.mes,
@@ -116,7 +116,7 @@ export function Dividas() {
         <Card className="p-4">
           <div className="p-2 bg-orange-50 rounded-lg w-fit mb-2"><TrendingDown size={18} className="text-orange-600" /></div>
           <div className="text-xl font-bold text-orange-600">{formatCurrency(totalDividas)}</div>
-          <div className="text-xs text-slate-400 mt-0.5">Total em DÃ­vidas</div>
+          <div className="text-xs text-slate-400 mt-0.5">Total em Dívidas</div>
         </Card>
         <Card className="p-4">
           <div className="text-xl font-bold text-slate-600">{formatCurrency(totalOriginal)}</div>
@@ -132,16 +132,16 @@ export function Dividas() {
             <DollarSign size={16} className="text-red-500" />
             <div className="text-xl font-bold text-red-600">{formatCurrency(parcelasMes)}</div>
           </div>
-          <div className="text-xs text-slate-400">Parcelas/MÃªs</div>
+          <div className="text-xs text-slate-400">Parcelas/Mês</div>
         </Card>
         <Card className="p-4">
           <div className="text-xl font-bold text-emerald-600">{quitadas}</div>
-          <div className="text-xs text-slate-400 mt-0.5">DÃ­vidas Quitadas</div>
+          <div className="text-xs text-slate-400 mt-0.5">Dívidas Quitadas</div>
         </Card>
       </div>
 
-      {/* ProjeÃ§Ã£o */}
-      <Card title="ProjeÃ§Ã£o de Parcelas - 12 Meses">
+      {/* Projeção */}
+      <Card title="Projeção de Parcelas - 12 Meses">
         <div className="p-4">
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={projecaoMeses} barSize={28}>
@@ -155,10 +155,10 @@ export function Dividas() {
         </div>
       </Card>
 
-      {/* Lista de DÃ­vidas */}
-      <Card title="DÃ­vidas Ativas" action={<Button size="sm" onClick={openNew}><Plus size={14} /> Nova DÃ­vida</Button>}>
+      {/* Lista de Dívidas */}
+      <Card title="Dívidas Ativas" action={<Button size="sm" onClick={openNew}><Plus size={14} /> Nova Dívida</Button>}>
         <div className="divide-y divide-slate-50">
-          {dividas.length === 0 && <p className="text-center text-slate-400 py-10">Nenhuma dÃ­vida cadastrada</p>}
+          {dividas.length === 0 && <p className="text-center text-slate-400 py-10">Nenhuma dívida cadastrada</p>}
           {dividas.map(d => {
             const pct = Math.min(100, ((d.valorOriginal - d.valorAtual) / d.valorOriginal) * 100)
             const parcelasRestantes = d.parcelas - d.parcelaAtual
@@ -192,7 +192,7 @@ export function Dividas() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
-                  <span className="flex items-center gap-1"><DollarSign size={12} /> Parcela: <strong>{formatCurrency(d.valorParcela)}/mÃªs</strong></span>
+                  <span className="flex items-center gap-1"><DollarSign size={12} /> Parcela: <strong>{formatCurrency(d.valorParcela)}/mês</strong></span>
                   <span className="flex items-center gap-1"><Percent size={12} /> Juros: <strong>{d.taxaJuros}% a.m.</strong></span>
                   <span className="flex items-center gap-1"><Calendar size={12} /> Vence: <strong>{formatDate(d.dataVencimento)}</strong></span>
                 </div>
@@ -204,7 +204,7 @@ export function Dividas() {
                     </Button>
                   )}
                   <Button size="sm" variant="ghost" onClick={() => setDetalhesId(detalhesId === d.id ? null : d.id)}>
-                    HistÃ³rico ({d.historicoPagamentos.length})
+                    Histórico ({d.historicoPagamentos.length})
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => openEdit(d)}><Pencil size={13} /></Button>
                   <Button size="sm" variant="ghost" onClick={() => deleteDivida(d.id)} className="text-red-500 hover:text-red-600"><Trash2 size={13} /></Button>
@@ -212,7 +212,7 @@ export function Dividas() {
 
                 {detalhesId === d.id && d.historicoPagamentos.length > 0 && (
                   <div className="mt-4 bg-slate-50 rounded-lg p-3">
-                    <div className="text-xs font-semibold text-slate-500 mb-2">HISTÃ“RICO DE PAGAMENTOS</div>
+                    <div className="text-xs font-semibold text-slate-500 mb-2">HISTÓRICO DE PAGAMENTOS</div>
                     <div className="space-y-1.5">
                       {d.historicoPagamentos.map(p => (
                         <div key={p.id} className="flex justify-between text-sm">
@@ -229,12 +229,12 @@ export function Dividas() {
         </div>
       </Card>
 
-      {/* Modal Nova DÃ­vida */}
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editId ? 'Editar DÃ­vida' : 'Nova DÃ­vida'} size="lg">
+      {/* Modal Nova Dívida */}
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editId ? 'Editar Dívida' : 'Nova Dívida'} size="lg">
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
-            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">DescriÃ§Ã£o *</label>
-            <input value={form.descricao} onChange={e => f('descricao', e.target.value)} className="fi" placeholder="Ex: EmprÃ©stimo banco, CartÃ£o, Financiamento..." />
+            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Descrição *</label>
+            <input value={form.descricao} onChange={e => f('descricao', e.target.value)} className="fi" placeholder="Ex: Empréstimo banco, Cartão, Financiamento..." />
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Credor</label>
@@ -252,7 +252,7 @@ export function Dividas() {
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
               Valor da Parcela
               {parcelasPreview.length > 0 && (
-                <span className="ml-2 text-emerald-600 font-normal">â†’ {parcelasPreview.length} parcelas</span>
+                <span className="ml-2 text-emerald-600 font-normal">→ {parcelasPreview.length} parcelas</span>
               )}
             </label>
             <input type="number" value={form.valorParcela || ''} onChange={e => f('valorParcela', parseFloat(e.target.value))} className="fi" />
@@ -266,7 +266,7 @@ export function Dividas() {
             <input type="number" value={form.parcelaAtual || ''} onChange={e => f('parcelaAtual', parseInt(e.target.value))} className="fi" />
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Data InÃ­cio (1Âª parcela)</label>
+            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Data Início (1Âª parcela)</label>
             <input type="date" value={form.dataInicio} onChange={e => f('dataInicio', e.target.value)} className="fi" />
           </div>
           <div>
@@ -289,7 +289,7 @@ export function Dividas() {
             </select>
           </div>
 
-          {/* Checkbox diluiÃ§Ã£o */}
+          {/* Checkbox diluição */}
           {!editId && parcelasPreview.length > 0 && (
             <label className="col-span-2 flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={gerarContasPagar} onChange={e => setGerarContasPagar(e.target.checked)} className="rounded" />
@@ -302,13 +302,13 @@ export function Dividas() {
             <div className="col-span-2">
               <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
                 <div className="text-xs font-semibold text-orange-700 mb-2 flex items-center gap-1">
-                  <CheckCircle size={12} /> {parcelasPreview.length} parcelas serÃ£o lanÃ§adas em Contas a Pagar:
+                  <CheckCircle size={12} /> {parcelasPreview.length} parcelas serão lançadas em Contas a Pagar:
                 </div>
                 <div className="space-y-1 max-h-36 overflow-y-auto">
                   {parcelasPreview.slice(0, 5).map((p, i) => (
                     <div key={i} className="flex items-center justify-between text-xs bg-white rounded-lg px-3 py-1.5 border border-orange-100">
                       <span className="font-medium text-slate-700">{p.descricao}</span>
-                      <span className="text-slate-500">{mesesLongos[p.mes - 1]}/{p.ano} Â· {formatCurrency(p.valor)}</span>
+                      <span className="text-slate-500">{mesesLongos[p.mes - 1]}/{p.ano} · {formatCurrency(p.valor)}</span>
                     </div>
                   ))}
                   {parcelasPreview.length > 5 && (

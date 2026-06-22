@@ -96,7 +96,7 @@ export function Provisionamento() {
         <Card className="p-4">
           <div className="flex items-center gap-2 mb-2">
             {variacao >= 0 ? <TrendingUp size={16} className="text-emerald-500" /> : <TrendingDown size={16} className="text-red-500" />}
-            <span className="text-xs text-slate-400">VariaÃ§Ã£o</span>
+            <span className="text-xs text-slate-400">Variação</span>
           </div>
           <div className={`text-xl font-bold ${variacao >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
             {variacao >= 0 ? '+' : ''}{formatCurrency(variacao)}
@@ -110,11 +110,11 @@ export function Provisionamento() {
           <div className="text-xl font-bold text-amber-600">
             {filtered.filter(p => p.status === 'previsto').length}
           </div>
-          <div className="text-xs text-slate-400 mt-1">itens nÃ£o realizados</div>
+          <div className="text-xs text-slate-400 mt-1">itens não realizados</div>
         </Card>
       </div>
 
-      {/* GrÃ¡fico */}
+      {/* Gráfico */}
       <Card title="Faturamento Previsto vs Realizado - 6 Meses">
         <div className="p-4">
           <ResponsiveContainer width="100%" height={220}>
@@ -161,7 +161,7 @@ export function Provisionamento() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-100">
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">DescriÃ§Ã£o</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Descrição</th>
                 <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Tipo</th>
                 <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell">Fonte</th>
                 <th className="text-right px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Previsto</th>
@@ -172,7 +172,7 @@ export function Provisionamento() {
             </thead>
             <tbody className="divide-y divide-slate-50">
               {filtered.length === 0 && (
-                <tr><td colSpan={7} className="text-center py-10 text-slate-400">Nenhum provisionamento para este perÃ­odo</td></tr>
+                <tr><td colSpan={7} className="text-center py-10 text-slate-400">Nenhum provisionamento para este período</td></tr>
               )}
               {filtered.map(p => {
                 const pct = p.valor > 0 ? (p.realizado / p.valor) * 100 : 0
@@ -218,7 +218,7 @@ export function Provisionamento() {
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editId ? 'Editar Provisionamento' : 'Novo Provisionamento'} size="md">
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
-            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">DescriÃ§Ã£o *</label>
+            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Descrição *</label>
             <input value={form.descricao} onChange={e => f('descricao', e.target.value)} className="fi" />
           </div>
           <div>
@@ -244,7 +244,7 @@ export function Provisionamento() {
             <input type="number" value={form.realizado || ''} onChange={e => f('realizado', parseFloat(e.target.value))} className="fi" />
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">MÃªs</label>
+            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Mês</label>
             <select value={form.mes} onChange={e => f('mes', parseInt(e.target.value))} className="fi">
               {meses.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
             </select>

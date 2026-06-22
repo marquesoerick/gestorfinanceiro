@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { Plus, Pencil, Trash2, CheckCircle, Filter, Building2, UserPlus, Package, X, ChevronDown } from 'lucide-react'
 import { useFinanceStore } from '../store/useFinanceStore'
 import {
@@ -12,7 +12,7 @@ import { Badge } from '../components/ui/Badge'
 import { MesNavigator } from '../components/ui/MesNavigator'
 import type { ContaReceber, FonteRenda, StatusConta, Prioridade, TipoPessoa, Pessoa } from '../types'
 
-// â”€â”€â”€ Item individual de uma venda â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Item individual de uma venda ───────────────────────────────────
 type ItemVenda = {
   _id: string
   produtoId: string
@@ -26,7 +26,7 @@ const newItem = (): ItemVenda => ({
   produtoId: '', fonteRendaId: '', descricao: '', valor: 0,
 })
 
-// â”€â”€â”€ Grupo de entradas por pessoa â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Grupo de entradas por pessoa ────────────────────────────────────
 type GrupoPessoa = {
   pessoaId: string
   pessoa: Pessoa | null
@@ -36,7 +36,7 @@ type GrupoPessoa = {
   status: 'pago' | 'parcial' | 'pendente' | 'atrasado'
 }
 
-// â”€â”€â”€ Form state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Form state ──────────────────────────────────────────────────────
 const emptyForm = () => ({
   pessoaId: '',
   status: 'pendente' as StatusConta,
@@ -78,7 +78,7 @@ export function ContasReceber() {
   const [filtroStatus, setFiltroStatus] = useState<string>('todos')
   const [filtroFonte, setFiltroFonte] = useState<string>('todos')
 
-  // â”€â”€â”€ Expandir/colapsar pessoas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Expandir/colapsar pessoas ────────────────────────────────────
   const [expandedPessoas, setExpandedPessoas] = useState<Set<string>>(new Set())
   const togglePessoa = (id: string) => setExpandedPessoas(prev => {
     const next = new Set(prev)
@@ -87,12 +87,12 @@ export function ContasReceber() {
     return next
   })
 
-  // â”€â”€â”€ Modal de pagamento â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Modal de pagamento ───────────────────────────────────────────
   const [pagarModal, setPagarModal] = useState<ContaReceber | null>(null)
   const [pagarValor, setPagarValor] = useState(0)
   const [pagarContaId, setPagarContaId] = useState('')
 
-  // â”€â”€â”€ Tabela e filtros â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Tabela e filtros ─────────────────────────────────────────────
   const filtered = useMemo(() =>
     contasReceber
       .filter(c =>
@@ -104,7 +104,7 @@ export function ContasReceber() {
       .sort((a, b) => a.vencimento.localeCompare(b.vencimento))
   , [contasReceber, mesAtivo, anoAtivo, filtroStatus, filtroFonte])
 
-  // â”€â”€â”€ Agrupar por pessoa â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Agrupar por pessoa ───────────────────────────────────────────
   const grupos = useMemo(() => {
     const map = new Map<string, GrupoPessoa>()
     const semPessoa: ContaReceber[] = []
@@ -138,7 +138,7 @@ export function ContasReceber() {
     }
   }, [filtered, pessoas])
 
-  // â”€â”€â”€ DÃ©bitos do modal: entradas do mÃªs filtrado para a pessoa â”€â”€â”€â”€
+  // ─── Débitos do modal: entradas do mês filtrado para a pessoa ────
   const todosDebitos = useMemo(() => {
     if (!pagarModal) return []
     if (pagarModal.pessoaId) {
@@ -153,7 +153,7 @@ export function ContasReceber() {
     todosDebitos.reduce((s, c) => s + (c.valor - (c.valorRecebido ?? 0)), 0)
   , [todosDebitos])
 
-  // â”€â”€â”€ DistribuiÃ§Ã£o PROPORCIONAL (por saldo de cada produto) â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Distribuição PROPORCIONAL (por saldo de cada produto) ────────
   const distribuicao = useMemo(() => {
     const totalSaldo = todosDebitos.reduce((s, d) => s + (d.valor - (d.valorRecebido ?? 0)), 0)
     return todosDebitos.map(d => {
@@ -165,7 +165,7 @@ export function ContasReceber() {
     })
   }, [todosDebitos, pagarValor])
 
-  // â”€â”€â”€ InformaÃ§Ã£o de restante/excedente para prÃ³ximo mÃªs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Informação de restante/excedente para próximo mês ──────────
   const pagamentoInfo = useMemo(() => {
     if (!pagarModal || pagarValor <= 0 || totalEmAberto <= 0) return null
     const nextMes = mesAtivo === 12 ? 1 : mesAtivo + 1
@@ -210,7 +210,7 @@ export function ContasReceber() {
     const nextMes = mesAtivo === 12 ? 1 : mesAtivo + 1
     const nextAno = mesAtivo === 12 ? anoAtivo + 1 : anoAtivo
 
-    // Aplica distribuiÃ§Ã£o proporcional no mÃªs atual
+    // Aplica distribuição proporcional no mês atual
     let totalBanco = 0
     for (const item of distribuicao) {
       if (item.aplicar > 0) {
@@ -219,7 +219,7 @@ export function ContasReceber() {
       }
     }
 
-    // PAGOU MENOS: cria lanÃ§amentos do restante no prÃ³ximo mÃªs
+    // PAGOU MENOS: cria lançamentos do restante no próximo mês
     if (pagarValor < totalEmAberto - 0.01) {
       for (const item of distribuicao) {
         const remaining = Math.round((item.saldo - item.aplicar) * 100) / 100
@@ -239,13 +239,13 @@ export function ContasReceber() {
             mesReferencia: nextMes,
             anoReferencia: nextAno,
             diaPagamento: item.d.diaPagamento ?? diaVenc,
-            observacoes: `DÃ©bito nÃ£o quitado em ${mesNome}/${anoAtivo}`,
+            observacoes: `Débito não quitado em ${mesNome}/${anoAtivo}`,
           })
         }
       }
     }
 
-    // PAGOU MAIS: abate excedente das parcelas do prÃ³ximo mÃªs
+    // PAGOU MAIS: abate excedente das parcelas do próximo mês
     if (pagarValor > totalEmAberto + 0.01 && pagarModal.pessoaId) {
       const excesso = Math.round((pagarValor - totalEmAberto) * 100) / 100
       const proximasParcelas = contasReceber.filter(c =>
@@ -279,7 +279,7 @@ export function ContasReceber() {
     setPagarModal(null)
   }
 
-  // â”€â”€â”€ Quick-add inline: Pessoa â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Quick-add inline: Pessoa ─────────────────────────────────────
   const [quickPessoa, setQuickPessoa] = useState(false)
   const [qpNome, setQpNome] = useState('')
   const [qpTipo, setQpTipo] = useState<TipoPessoa>('cliente')
@@ -295,7 +295,7 @@ export function ContasReceber() {
     setQpNome(''); setQpTelefone(''); setQuickPessoa(false)
   }
 
-  // â”€â”€â”€ Quick-add inline: Produto â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Quick-add inline: Produto ────────────────────────────────────
   const [quickProduto, setQuickProduto] = useState(false)
   const [qprNome, setQprNome] = useState('')
   const [qprFonteId, setQprFonteId] = useState('')
@@ -326,7 +326,7 @@ export function ContasReceber() {
     setQprNome(''); setQprFonteId(''); setQprPreco(''); setQuickProduto(false)
   }
 
-  // â”€â”€â”€ Item helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Item helpers ─────────────────────────────────────────────────
   const addItemVenda = () => setForm(prev => ({ ...prev, itens: [...prev.itens, newItem()] }))
   const removeItemVenda = (idx: number) =>
     setForm(prev => ({ ...prev, itens: prev.itens.filter((_, i) => i !== idx) }))
@@ -349,7 +349,7 @@ export function ContasReceber() {
     })
   }
 
-  // â”€â”€â”€ KPIs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── KPIs ─────────────────────────────────────────────────────────
   const totais = useMemo(() => ({
     total: filtered.reduce((s, c) => s + c.valor, 0),
     pendente: filtered.filter(c => c.status === 'pendente').reduce((s, c) => s + c.valor, 0),
@@ -357,7 +357,7 @@ export function ContasReceber() {
     recebido: filtered.filter(c => c.status === 'pago').reduce((s, c) => s + (c.valorRecebido ?? c.valor), 0),
   }), [filtered])
 
-  // â”€â”€â”€ Preview de todos os lanÃ§amentos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Preview de todos os lançamentos ─────────────────────────────
   const allEntries = useMemo(() => {
     const itensValidos = form.itens.filter(it => it.valor > 0)
     if (!itensValidos.length) return []
@@ -400,7 +400,7 @@ export function ContasReceber() {
   const showPreview = !editId && allEntries.length > 0 &&
     (form.itens.filter(it => it.valor > 0).length > 1 || form.parcelas > 1)
 
-  // â”€â”€â”€ Abrir modais â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Abrir modais ─────────────────────────────────────────────────
   const openNew = () => {
     const d = new Date()
     setForm({
@@ -427,7 +427,7 @@ export function ContasReceber() {
     setEditId(c.id); setQuickPessoa(false); setQuickProduto(false); setModalOpen(true)
   }
 
-  // â”€â”€â”€ Salvar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Salvar ───────────────────────────────────────────────────────
   const save = () => {
     const itensValidos = form.itens.filter(it => it.valor > 0)
     if (!itensValidos.length) return
@@ -474,7 +474,7 @@ export function ContasReceber() {
 
   return (
     <div className="space-y-5">
-      {/* NavegaÃ§Ã£o Mensal */}
+      {/* Navegação Mensal */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <MesNavigator />
         <Button onClick={openNew}><Plus size={16} /> Nova Venda</Button>
@@ -483,7 +483,7 @@ export function ContasReceber() {
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { label: 'Total do mÃªs', value: totais.total, bar: 'bg-slate-400', text: 'text-slate-800' },
+          { label: 'Total do mês', value: totais.total, bar: 'bg-slate-400', text: 'text-slate-800' },
           { label: 'Pendente', value: totais.pendente, bar: 'bg-blue-400', text: 'text-blue-700' },
           { label: 'Vencido', value: totais.vencido, bar: 'bg-red-400', text: 'text-red-700' },
           { label: 'Recebido', value: totais.recebido, bar: 'bg-emerald-400', text: 'text-emerald-700' },
@@ -513,22 +513,22 @@ export function ContasReceber() {
           <option value="pessoal">Pessoal</option>
         </select>
         <span className="ml-auto text-xs text-slate-400 flex-shrink-0 pl-2">
-          {grupos.comPessoa.length} cliente{grupos.comPessoa.length !== 1 ? 's' : ''} Â· {grupos.semPessoa.length} avulso{grupos.semPessoa.length !== 1 ? 's' : ''}
+          {grupos.comPessoa.length} cliente{grupos.comPessoa.length !== 1 ? 's' : ''} · {grupos.semPessoa.length} avulso{grupos.semPessoa.length !== 1 ? 's' : ''}
         </span>
       </div>
 
-      {/* â”€â”€â”€ Lista agrupada por pessoa â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ─── Lista agrupada por pessoa ──────────────────────────────── */}
       <Card>
         {filtered.length === 0 ? (
           <div className="text-center py-14 text-slate-400">
-            <div className="text-4xl mb-2">ðŸ’°</div>
+            <div className="text-4xl mb-2">💰</div>
             <div>Nenhum recebimento em {mesesLongos[mesAtivo - 1]} {anoAtivo}</div>
             <button onClick={openNew} className="mt-2 text-emerald-500 text-sm hover:underline">+ Registrar venda</button>
           </div>
         ) : (
           <div className="divide-y divide-slate-100">
 
-            {/* â”€â”€ Grupos por pessoa â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+            {/* ── Grupos por pessoa ───────────────────────────────── */}
             {grupos.comPessoa.map(grupo => {
               const isExpanded = expandedPessoas.has(grupo.pessoaId)
               const atrasado = grupo.status === 'atrasado'
@@ -550,8 +550,8 @@ export function ContasReceber() {
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-slate-800 text-sm">{grupo.pessoa?.nome ?? 'Pessoa'}</div>
                       <div className="text-xs text-slate-400 mt-0.5">
-                        {grupo.entradas.length} produto{grupo.entradas.length > 1 ? 's' : ''} neste mÃªs
-                        {grupo.pessoa?.telefone && <span className="ml-2">ðŸ“ž {grupo.pessoa.telefone}</span>}
+                        {grupo.entradas.length} produto{grupo.entradas.length > 1 ? 's' : ''} neste mês
+                        {grupo.pessoa?.telefone && <span className="ml-2">📞 {grupo.pessoa.telefone}</span>}
                       </div>
                     </div>
 
@@ -562,7 +562,7 @@ export function ContasReceber() {
                         <div className="text-xs text-amber-600">Saldo: {formatCurrency(grupo.saldoDevedor)}</div>
                       )}
                       {grupo.saldoDevedor <= 0 && grupo.status === 'pago' && (
-                        <div className="text-xs text-emerald-600">Quitado âœ“</div>
+                        <div className="text-xs text-emerald-600">Quitado ✓</div>
                       )}
                     </div>
 
@@ -637,7 +637,7 @@ export function ContasReceber() {
               )
             })}
 
-            {/* â”€â”€ Entradas avulsas (sem pessoa) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+            {/* ── Entradas avulsas (sem pessoa) ───────────────────── */}
             {grupos.semPessoa.length > 0 && (
               <>
                 {grupos.comPessoa.length > 0 && (
@@ -688,7 +688,7 @@ export function ContasReceber() {
         )}
       </Card>
 
-      {/* â”€â”€â”€ Modal: Nova Venda / Editar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* ─── Modal: Nova Venda / Editar ──────────────────────────────── */}
       <Modal open={modalOpen} onClose={() => setModalOpen(false)}
         title={editId ? 'Editar Conta a Receber' : 'Nova Venda'} size="lg">
         <div className="space-y-5">
@@ -712,7 +712,7 @@ export function ContasReceber() {
               ))}
             </select>
             {pessoaSelecionada?.telefone && !quickPessoa && (
-              <div className="text-xs text-slate-400 mt-1">ðŸ“ž {pessoaSelecionada.telefone}</div>
+              <div className="text-xs text-slate-400 mt-1">📞 {pessoaSelecionada.telefone}</div>
             )}
             {quickPessoa && (
               <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-xl space-y-2">
@@ -746,7 +746,7 @@ export function ContasReceber() {
                 Itens da venda
                 {form.itens.length > 1 && (
                   <span className="ml-2 font-normal text-slate-400">
-                    ({form.itens.filter(it => it.valor > 0).length} produto(s) Â· {formatCurrency(totalItens)})
+                    ({form.itens.filter(it => it.valor > 0).length} produto(s) · {formatCurrency(totalItens)})
                   </span>
                 )}
               </label>
@@ -784,12 +784,12 @@ export function ContasReceber() {
                     ))}
                   </select>
                   <input type="number" value={qprPreco} onChange={e => setQprPreco(parseFloat(e.target.value) || '')}
-                    placeholder="PreÃ§o base"
+                    placeholder="Preço base"
                     className="border border-indigo-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-indigo-400 bg-white" />
                 </div>
                 <button type="button" onClick={salvarQuickProduto} disabled={!qprNome.trim() || !qprFonteId}
                   className="w-full py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-40 transition-colors">
-                  Cadastrar e adicionar Ã  venda
+                  Cadastrar e adicionar à venda
                 </button>
               </div>
             )}
@@ -807,12 +807,12 @@ export function ContasReceber() {
                           <option value="">â€” Selecione o produto (opcional) â€”</option>
                           {produtos.filter(p => p.ativo).map(p => {
                             const f = fonteRendaCategorias.find(f => f.id === p.fonteRendaId)
-                            return <option key={p.id} value={p.id}>{p.nome}{f ? ` Â· ${f.nome}` : ''}</option>
+                            return <option key={p.id} value={p.id}>{p.nome}{f ? ` · ${f.nome}` : ''}</option>
                           })}
                         </select>
                         <div className="flex gap-2">
                           <input value={item.descricao} onChange={e => updateItemVenda(idx, 'descricao', e.target.value)}
-                            placeholder={prod?.nome ?? 'DescriÃ§Ã£o (opcional)'}
+                            placeholder={prod?.nome ?? 'Descrição (opcional)'}
                             className="flex-1 border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm outline-none focus:border-emerald-400" />
                           <div className="relative flex-shrink-0 w-32">
                             <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">R$</span>
@@ -867,7 +867,7 @@ export function ContasReceber() {
             )}
             {!editId && form.parcelas > 1 && (
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Todo dia (do mÃªs)</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Todo dia (do mês)</label>
                 <input type="number" min="1" max="28" value={form.diaPagamento}
                   onChange={e => f('diaPagamento', Math.min(28, Math.max(1, parseInt(e.target.value) || 1)))}
                   className="fi" />
@@ -905,9 +905,9 @@ export function ContasReceber() {
             )}
           </div>
 
-          {/* ObservaÃ§Ãµes */}
+          {/* Observações */}
           <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">ObservaÃ§Ãµes</label>
+            <label className="block text-xs font-semibold text-slate-600 mb-1">Observações</label>
             <textarea value={form.observacoes} onChange={e => f('observacoes', e.target.value)}
               rows={2} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-emerald-400 resize-none" />
           </div>
@@ -917,7 +917,7 @@ export function ContasReceber() {
             <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
               <div className="text-xs font-semibold text-emerald-700 mb-2 flex items-center gap-1">
                 <CheckCircle size={12} />
-                {allEntries.length} lanÃ§amento(s) serÃ£o criados
+                {allEntries.length} lançamento(s) serão criados
                 {form.parcelas > 1 && <> â€” todo dia {form.diaPagamento} â€” {form.parcelas}x</>}
               </div>
               <div className="space-y-1.5 max-h-48 overflow-y-auto">
@@ -929,13 +929,13 @@ export function ContasReceber() {
                         {fonte && <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: fonte.cor }} />}
                         <span className="font-medium text-slate-700 truncate">{e.descricao}</span>
                       </div>
-                      <span className="text-slate-500 flex-shrink-0">{mesesLongos[e.mes - 1]}/{e.ano} Â· {formatCurrency(e.valor)}</span>
+                      <span className="text-slate-500 flex-shrink-0">{mesesLongos[e.mes - 1]}/{e.ano} · {formatCurrency(e.valor)}</span>
                     </div>
                   )
                 })}
               </div>
               <div className="mt-2 pt-2 border-t border-emerald-100 flex justify-between text-xs font-bold text-emerald-700">
-                <span>{form.itens.filter(it => it.valor > 0).length} produto(s) Ã— {form.parcelas}x</span>
+                <span>{form.itens.filter(it => it.valor > 0).length} produto(s) × {form.parcelas}x</span>
                 <span>Total: {formatCurrency(allEntries.reduce((s, e) => s + e.valor, 0))}</span>
               </div>
             </div>
@@ -945,18 +945,18 @@ export function ContasReceber() {
         <div className="flex gap-3 mt-6 pt-4 border-t border-slate-100">
           <Button variant="secondary" onClick={() => setModalOpen(false)} className="flex-1">Cancelar</Button>
           <Button onClick={save} className="flex-1" disabled={form.itens.filter(it => it.valor > 0).length === 0}>
-            {editId ? 'Salvar' : allEntries.length > 1 ? `Criar ${allEntries.length} lanÃ§amento(s)` : 'Adicionar'}
+            {editId ? 'Salvar' : allEntries.length > 1 ? `Criar ${allEntries.length} lançamento(s)` : 'Adicionar'}
           </Button>
         </div>
       </Modal>
 
-      {/* â”€â”€â”€ Modal Registrar Pagamento (distribuiÃ§Ã£o proporcional) â”€â”€â”€â”€â”€â”€ */}
+      {/* ─── Modal Registrar Pagamento (distribuição proporcional) ────── */}
       <Modal open={!!pagarModal} onClose={() => setPagarModal(null)} title="Registrar Pagamento" size="md">
         {pagarModal && (() => {
           const pessoa = pagarModal.pessoaId ? pessoas.find(p => p.id === pagarModal.pessoaId) : null
           return (
             <div className="space-y-4">
-              {/* CabeÃ§alho */}
+              {/* Cabeçalho */}
               {pessoa ? (
                 <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
                   <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm flex-shrink-0">
@@ -964,7 +964,7 @@ export function ContasReceber() {
                   </div>
                   <div>
                     <div className="font-semibold text-slate-800">{pessoa.nome}</div>
-                    {pessoa.telefone && <div className="text-xs text-slate-400">ðŸ“ž {pessoa.telefone}</div>}
+                    {pessoa.telefone && <div className="text-xs text-slate-400">📞 {pessoa.telefone}</div>}
                     <div className="text-xs text-red-500 font-medium mt-0.5">
                       Total em aberto ({mesesLongos[mesAtivo - 1]}): {formatCurrency(totalEmAberto)}
                     </div>
@@ -997,7 +997,7 @@ export function ContasReceber() {
                           {fonte && <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: fonte.cor }} />}
                           <div className="flex-1 min-w-0">
                             <div className="font-medium text-slate-700 truncate">{d.descricao}</div>
-                            {fonte && <div className="text-slate-400">{fonte.nome} Â· {pct}% do total</div>}
+                            {fonte && <div className="text-slate-400">{fonte.nome} · {pct}% do total</div>}
                           </div>
                           <div className="text-right flex-shrink-0">
                             <div className="font-semibold text-slate-700">{formatCurrency(saldo)}</div>
@@ -1016,7 +1016,7 @@ export function ContasReceber() {
 
               {/* Valor a pagar */}
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Quanto estÃ¡ pagando agora?</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Quanto está pagando agora?</label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">R$</span>
                   <input type="number" step="0.01" min="0" value={pagarValor || ''}
@@ -1032,11 +1032,11 @@ export function ContasReceber() {
                 </div>
               </div>
 
-              {/* Preview distribuiÃ§Ã£o proporcional */}
+              {/* Preview distribuição proporcional */}
               {pagarValor > 0 && todosDebitos.length > 1 && (
                 <div className="bg-slate-50 rounded-xl p-3">
                   <div className="text-xs font-semibold text-slate-500 mb-2">
-                    DistribuiÃ§Ã£o proporcional ao saldo de cada produto
+                    Distribuição proporcional ao saldo de cada produto
                   </div>
                   <div className="space-y-1">
                     {distribuicao.map((item, i) => {
@@ -1046,12 +1046,12 @@ export function ContasReceber() {
                           {fonte && <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: fonte.cor }} />}
                           <span className="flex-1 text-slate-600 truncate">{item.d.descricao}</span>
                           <span className="text-slate-400">{formatCurrency(item.saldo)}</span>
-                          <span className="text-slate-300">â†’</span>
+                          <span className="text-slate-300">→</span>
                           <span className={`font-semibold ${item.novoStatus === 'pago' ? 'text-emerald-600' : 'text-amber-600'}`}>
                             {formatCurrency(item.aplicar)}
                           </span>
                           <span className={`px-1.5 py-0.5 rounded font-medium ${item.novoStatus === 'pago' ? 'bg-emerald-100 text-emerald-700' : item.novoStatus === 'parcial' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'}`}>
-                            {item.novoStatus === 'pago' ? 'âœ“' : item.novoStatus === 'parcial' ? '~' : '-'}
+                            {item.novoStatus === 'pago' ? '✓' : item.novoStatus === 'parcial' ? '~' : '-'}
                           </span>
                         </div>
                       )
@@ -1060,7 +1060,7 @@ export function ContasReceber() {
                 </div>
               )}
 
-              {/* NotificaÃ§Ã£o: restante / excedente */}
+              {/* Notificação: restante / excedente */}
               {pagamentoInfo && (
                 <div className={`p-3 rounded-xl text-xs flex items-start gap-2 border ${
                   pagamentoInfo.type === 'restante'
@@ -1068,16 +1068,16 @@ export function ContasReceber() {
                     : 'bg-emerald-50 border-emerald-200 text-emerald-800'
                 }`}>
                   <span className="text-base leading-none flex-shrink-0">
-                    {pagamentoInfo.type === 'restante' ? 'â­' : 'ðŸ’°'}
+                    {pagamentoInfo.type === 'restante' ? 'â­' : '💰'}
                   </span>
                   <div className="space-y-0.5">
                     {pagamentoInfo.type === 'restante' ? (
                       <>
                         <div className="font-semibold">
-                          Restante ({formatCurrency(pagamentoInfo.valor)}) lanÃ§ado em {mesesLongos[pagamentoInfo.nextMes - 1]}/{pagamentoInfo.nextAno}
+                          Restante ({formatCurrency(pagamentoInfo.valor)}) lançado em {mesesLongos[pagamentoInfo.nextMes - 1]}/{pagamentoInfo.nextAno}
                         </div>
                         <div className="text-amber-700">
-                          SerÃ£o criados lanÃ§amentos no prÃ³ximo mÃªs para cada produto com o saldo nÃ£o pago,
+                          Serão criados lançamentos no próximo mês para cada produto com o saldo não pago,
                           identificados como "(restante de {mesesLongos[mesAtivo - 1]}/{anoAtivo})".
                         </div>
                       </>
@@ -1091,8 +1091,8 @@ export function ContasReceber() {
                         </div>
                         <div className="text-emerald-700">
                           {pagamentoInfo.hasNext
-                            ? `O excedente serÃ¡ aplicado proporcionalmente nas parcelas de ${mesesLongos[pagamentoInfo.nextMes - 1]}/${pagamentoInfo.nextAno}, identificado como "(saldo de ${mesesLongos[mesAtivo - 1]}/${anoAtivo})".`
-                            : 'NÃ£o hÃ¡ parcelas no prÃ³ximo mÃªs para abater o excedente. O valor extra ficarÃ¡ apenas no saldo da conta.'}
+                            ? `O excedente será aplicado proporcionalmente nas parcelas de ${mesesLongos[pagamentoInfo.nextMes - 1]}/${pagamentoInfo.nextAno}, identificado como "(saldo de ${mesesLongos[mesAtivo - 1]}/${anoAtivo})".`
+                            : 'Não há parcelas no próximo mês para abater o excedente. O valor extra ficará apenas no saldo da conta.'}
                         </div>
                       </>
                     )}
@@ -1100,7 +1100,7 @@ export function ContasReceber() {
                 </div>
               )}
 
-              {/* Conta bancÃ¡ria */}
+              {/* Conta bancária */}
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-2">Em qual conta recebeu?</label>
                 {contasBancarias.length > 0 ? (
@@ -1112,11 +1112,11 @@ export function ContasReceber() {
                           onChange={() => setPagarContaId(cb.id)} />
                         <div className="flex-1">
                           <div className="font-medium text-sm text-slate-700">{cb.nome}</div>
-                          <div className="text-xs text-slate-400">{cb.banco} Â· {formatCurrency(cb.saldo)}</div>
+                          <div className="text-xs text-slate-400">{cb.banco} · {formatCurrency(cb.saldo)}</div>
                         </div>
                         {pagarContaId === cb.id && pagarValor > 0 && (
                           <span className="text-xs text-emerald-600 font-semibold">
-                            â†’ {formatCurrency(cb.saldo + Math.min(pagarValor, totalEmAberto))}
+                            → {formatCurrency(cb.saldo + Math.min(pagarValor, totalEmAberto))}
                           </span>
                         )}
                       </label>

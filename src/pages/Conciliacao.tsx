@@ -9,7 +9,7 @@ import { Badge } from '../components/ui/Badge'
 
 const emptyForm = () => ({
   data: toDateInput(), descricao: '', valor: 0,
-  tipo: 'debito' as 'debito' | 'credito', banco: 'ItaÃº',
+  tipo: 'debito' as 'debito' | 'credito', banco: 'Itaú',
   categoria: '', conciliado: false, statusConciliacao: 'pendente' as const
 })
 
@@ -79,19 +79,19 @@ export function Conciliacao() {
         </Card>
         <Card className="p-4">
           <div className="text-xl font-bold text-emerald-600">{formatCurrency(stats.totalCredito)}</div>
-          <div className="text-xs text-slate-400 mt-0.5">Total CrÃ©ditos</div>
+          <div className="text-xs text-slate-400 mt-0.5">Total Créditos</div>
         </Card>
         <Card className="p-4">
           <div className="text-xl font-bold text-red-600">{formatCurrency(stats.totalDebito)}</div>
-          <div className="text-xs text-slate-400 mt-0.5">Total DÃ©bitos</div>
+          <div className="text-xs text-slate-400 mt-0.5">Total Débitos</div>
         </Card>
       </div>
 
-      {/* Progresso de ConciliaÃ§Ã£o */}
+      {/* Progresso de Conciliação */}
       <Card className="p-5">
         <div className="flex items-center gap-3 mb-3">
           <GitMerge size={18} className="text-indigo-500" />
-          <h3 className="font-semibold text-slate-700">Progresso da ConciliaÃ§Ã£o</h3>
+          <h3 className="font-semibold text-slate-700">Progresso da Conciliação</h3>
           <span className="ml-auto text-sm font-bold text-indigo-600">
             {transacoesBancarias.length > 0
               ? `${((stats.conciliadas / transacoesBancarias.length) * 100).toFixed(0)}%`
@@ -125,11 +125,11 @@ export function Conciliacao() {
             <option value="divergente">Divergente</option>
           </select>
           <select value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)} className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 bg-white text-slate-700 outline-none">
-            <option value="todos">CrÃ©dito + DÃ©bito</option>
-            <option value="credito">CrÃ©dito</option>
-            <option value="debito">DÃ©bito</option>
+            <option value="todos">Crédito + Débito</option>
+            <option value="credito">Crédito</option>
+            <option value="debito">Débito</option>
           </select>
-          <Button onClick={() => setModalOpen(true)} className="ml-auto"><Plus size={16} /> Nova TransaÃ§Ã£o</Button>
+          <Button onClick={() => setModalOpen(true)} className="ml-auto"><Plus size={16} /> Nova Transação</Button>
         </div>
       </Card>
 
@@ -140,7 +140,7 @@ export function Conciliacao() {
             <thead>
               <tr className="bg-slate-50 border-b border-slate-100">
                 <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Data</th>
-                <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">DescriÃ§Ã£o</th>
+                <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Descrição</th>
                 <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden md:table-cell">Banco</th>
                 <th className="text-left px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell">Tipo</th>
                 <th className="text-right px-3 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Valor</th>
@@ -150,7 +150,7 @@ export function Conciliacao() {
             </thead>
             <tbody className="divide-y divide-slate-50">
               {filtered.length === 0 && (
-                <tr><td colSpan={7} className="text-center py-10 text-slate-400">Nenhuma transaÃ§Ã£o encontrada</td></tr>
+                <tr><td colSpan={7} className="text-center py-10 text-slate-400">Nenhuma transação encontrada</td></tr>
               )}
               {filtered.map(t => (
                 <tr key={t.id} className={`hover:bg-slate-50 ${t.conciliado ? '' : 'bg-amber-50/20'}`}>
@@ -162,7 +162,7 @@ export function Conciliacao() {
                   <td className="px-3 py-3 hidden md:table-cell text-sm text-slate-500">{t.banco}</td>
                   <td className="px-3 py-3 hidden lg:table-cell">
                     <Badge className={t.tipo === 'credito' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}>
-                      {t.tipo === 'credito' ? 'CrÃ©dito' : 'DÃ©bito'}
+                      {t.tipo === 'credito' ? 'Crédito' : 'Débito'}
                     </Badge>
                   </td>
                   <td className={`px-3 py-3 text-right font-semibold ${t.tipo === 'credito' ? 'text-emerald-600' : 'text-red-600'}`}>
@@ -183,7 +183,7 @@ export function Conciliacao() {
                           <CheckCircle size={15} />
                         </button>
                       ) : (
-                        <button onClick={() => desconciliar(t.id)} className="p-1.5 rounded hover:bg-amber-50 text-amber-600" title="Desfazer conciliaÃ§Ã£o">
+                        <button onClick={() => desconciliar(t.id)} className="p-1.5 rounded hover:bg-amber-50 text-amber-600" title="Desfazer conciliação">
                           <XCircle size={15} />
                         </button>
                       )}
@@ -199,11 +199,11 @@ export function Conciliacao() {
         </div>
       </Card>
 
-      {/* Modal Nova TransaÃ§Ã£o */}
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Nova TransaÃ§Ã£o BancÃ¡ria" size="md">
+      {/* Modal Nova Transação */}
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Nova Transação Bancária" size="md">
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
-            <label className="block text-xs font-semibold text-slate-600 mb-1">DescriÃ§Ã£o *</label>
+            <label className="block text-xs font-semibold text-slate-600 mb-1">Descrição *</label>
             <input value={form.descricao} onChange={e => f('descricao', e.target.value)} className="fi" />
           </div>
           <div>
@@ -217,8 +217,8 @@ export function Conciliacao() {
           <div>
             <label className="block text-xs font-semibold text-slate-600 mb-1">Tipo</label>
             <select value={form.tipo} onChange={e => f('tipo', e.target.value)} className="fi">
-              <option value="debito">DÃ©bito</option>
-              <option value="credito">CrÃ©dito</option>
+              <option value="debito">Débito</option>
+              <option value="credito">Crédito</option>
             </select>
           </div>
           <div>

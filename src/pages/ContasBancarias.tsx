@@ -12,7 +12,7 @@ const cores = ['#6366f1', '#10b981', '#f97316', '#ec4899', '#0ea5e9', '#84cc16',
 
 const tipoLabel: Record<string, string> = {
   corrente: 'Conta Corrente',
-  poupanca: 'PoupanÃ§a',
+  poupanca: 'Poupança',
   investimento: 'Investimento',
   carteira: 'Carteira Digital',
 }
@@ -86,7 +86,7 @@ export function ContasBancarias() {
               </div>
 
               <div className="mb-4">
-                <div className="text-xs text-slate-400 mb-0.5">Saldo disponÃ­vel</div>
+                <div className="text-xs text-slate-400 mb-0.5">Saldo disponível</div>
                 <div className="text-2xl font-bold" style={{ color: c.cor }}>{formatCurrency(c.saldo)}</div>
               </div>
 
@@ -115,7 +115,7 @@ export function ContasBancarias() {
       </div>
 
       {/* Modal */}
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editId ? 'Editar Conta' : 'Nova Conta BancÃ¡ria'} size="md">
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editId ? 'Editar Conta' : 'Nova Conta Bancária'} size="md">
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Nome da Conta *</label>
@@ -132,7 +132,7 @@ export function ContasBancarias() {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">AgÃªncia</label>
+            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Agência</label>
             <input value={form.agencia} onChange={e => f('agencia', e.target.value)} className="fi" />
           </div>
           <div>

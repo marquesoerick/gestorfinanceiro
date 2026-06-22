@@ -28,7 +28,7 @@ export function Configuracoes() {
   const store = useFinanceStore()
   const [aba, setAba] = useState<Aba>('pessoas')
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€ Pessoas â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────── Pessoas ────────
   const [pModal, setPModal] = useState(false)
   const [pEditId, setPEditId] = useState<string | null>(null)
   const [pForm, setPForm] = useState<Omit<Pessoa, 'id'>>({ nome: '', tipo: 'cliente', ativa: true })
@@ -43,7 +43,7 @@ export function Configuracoes() {
   }
   const fp = (k: keyof typeof pForm, v: unknown) => setPForm(prev => ({ ...prev, [k]: v }))
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€ Produtos â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────── Produtos ────────
   const [prModal, setPrModal] = useState(false)
   const [prEditId, setPrEditId] = useState<string | null>(null)
   const [prForm, setPrForm] = useState<Omit<Produto, 'id'>>({ nome: '', fonteRendaId: '', ativo: true })
@@ -58,7 +58,7 @@ export function Configuracoes() {
   }
   const fpr = (k: keyof typeof prForm, v: unknown) => setPrForm(prev => ({ ...prev, [k]: v }))
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€ Fontes de Renda â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────── Fontes de Renda ────────
   const [fModal, setFModal] = useState(false)
   const [fEditId, setFEditId] = useState<string | null>(null)
   const [fForm, setFForm] = useState<Omit<FonteRendaCategoria, 'id'>>({ nome: '', cor: '#10b981', ativa: true })
@@ -73,7 +73,7 @@ export function Configuracoes() {
   }
   const ff = (k: keyof typeof fForm, v: unknown) => setFForm(prev => ({ ...prev, [k]: v }))
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€ Contas BancÃ¡rias â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────── Contas Bancárias ────────
   const [cModal, setCModal] = useState(false)
   const [cEditId, setCEditId] = useState<string | null>(null)
   const [cForm, setCForm] = useState<Omit<ContaBancaria, 'id'>>({
@@ -91,7 +91,7 @@ export function Configuracoes() {
   }
   const fc = (k: keyof typeof cForm, v: unknown) => setCForm(prev => ({ ...prev, [k]: v }))
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€ Backup â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────── Backup ────────
   const [confirmClear, setConfirmClear] = useState(false)
   const [seeded, setSeeded] = useState(false)
 
@@ -139,12 +139,12 @@ export function Configuracoes() {
 
   const carregarDemo = () => { seedDemoData(); setSeeded(true); setTimeout(() => setSeeded(false), 3000) }
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€ Tabs config â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────── Tabs config ────────
   const tabs: { id: Aba; label: string; icon: React.ElementType; count?: number }[] = [
     { id: 'pessoas', label: 'Pessoas', icon: Users, count: store.pessoas.length },
     { id: 'produtos', label: 'Produtos', icon: Package, count: store.produtos.length },
     { id: 'fontes', label: 'Fontes de Renda', icon: TrendingUp, count: store.fonteRendaCategorias.length },
-    { id: 'contas', label: 'Contas BancÃ¡rias', icon: Building2, count: store.contasBancarias.length },
+    { id: 'contas', label: 'Contas Bancárias', icon: Building2, count: store.contasBancarias.length },
     { id: 'dados', label: 'Backup', icon: Download },
     { id: 'sistema', label: 'Sistema', icon: Settings2 },
   ]
@@ -178,7 +178,7 @@ export function Configuracoes() {
         </div>
       </div>
 
-      {/* â”€â”€â”€ Aba: PESSOAS â”€â”€â”€ */}
+      {/* ─── Aba: PESSOAS ─── */}
       {aba === 'pessoas' && (
         <Card title="Pessoas cadastradas" action={<Button size="sm" onClick={openPNew}><Plus size={14} /> Nova Pessoa</Button>}>
           {store.pessoas.length === 0 ? (
@@ -217,13 +217,13 @@ export function Configuracoes() {
         </Card>
       )}
 
-      {/* â”€â”€â”€ Aba: PRODUTOS â”€â”€â”€ */}
+      {/* ─── Aba: PRODUTOS ─── */}
       {aba === 'produtos' && (
         <Card title="Produtos" action={<Button size="sm" onClick={openPrNew}><Plus size={14} /> Novo Produto</Button>}>
           {store.fonteRendaCategorias.length === 0 && (
             <div className="mx-5 my-3 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-700">
               âš  Cadastre pelo menos uma <strong>Fonte de Renda</strong> antes de adicionar produtos.
-              <button onClick={() => setAba('fontes')} className="ml-2 underline font-medium">Ir para Fontes â†’</button>
+              <button onClick={() => setAba('fontes')} className="ml-2 underline font-medium">Ir para Fontes →</button>
             </div>
           )}
           {store.produtos.length === 0 ? (
@@ -254,9 +254,9 @@ export function Configuracoes() {
                           </div>
                         )}
                         {p.precoBase && (
-                          <span className="text-xs text-slate-400">Â· {formatCurrency(p.precoBase)}</span>
+                          <span className="text-xs text-slate-400">· {formatCurrency(p.precoBase)}</span>
                         )}
-                        {p.descricao && <span className="text-xs text-slate-400 truncate">Â· {p.descricao}</span>}
+                        {p.descricao && <span className="text-xs text-slate-400 truncate">· {p.descricao}</span>}
                       </div>
                     </div>
                     {!p.ativo && <Badge className="bg-slate-100 text-slate-400">Inativo</Badge>}
@@ -272,7 +272,7 @@ export function Configuracoes() {
         </Card>
       )}
 
-      {/* â”€â”€â”€ Aba: FONTES DE RENDA â”€â”€â”€ */}
+      {/* ─── Aba: FONTES DE RENDA ─── */}
       {aba === 'fontes' && (
         <Card title="Fontes de Renda" action={<Button size="sm" onClick={openFNew}><Plus size={14} /> Nova Fonte</Button>}>
           {store.fonteRendaCategorias.length === 0 ? (
@@ -306,14 +306,14 @@ export function Configuracoes() {
         </Card>
       )}
 
-      {/* â”€â”€â”€ Aba: CONTAS BANCÃRIAS â”€â”€â”€ */}
+      {/* ─── Aba: CONTAS BANCÃRIAS ─── */}
       {aba === 'contas' && (
-        <Card title="Contas BancÃ¡rias" action={<Button size="sm" onClick={openCNew}><Plus size={14} /> Nova Conta</Button>}>
+        <Card title="Contas Bancárias" action={<Button size="sm" onClick={openCNew}><Plus size={14} /> Nova Conta</Button>}>
           {store.contasBancarias.length === 0 ? (
             <div className="p-10 text-center text-slate-400">
               <Building2 size={32} className="mx-auto mb-2 text-slate-200" />
               <div>Nenhuma conta cadastrada</div>
-              <div className="text-xs mt-1">Nubank, ItaÃº, Carteira, etc.</div>
+              <div className="text-xs mt-1">Nubank, Itaú, Carteira, etc.</div>
               <Button onClick={openCNew} className="mt-3" size="sm"><Plus size={13} /> Cadastrar</Button>
             </div>
           ) : (
@@ -323,7 +323,7 @@ export function Configuracoes() {
                   <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ background: c.cor }} />
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-sm text-slate-700">{c.nome}</div>
-                    <div className="text-xs text-slate-400">{c.banco} Â· {c.tipo === 'corrente' ? 'C/C' : c.tipo === 'poupanca' ? 'PoupanÃ§a' : c.tipo === 'investimento' ? 'Investimento' : 'Carteira'}</div>
+                    <div className="text-xs text-slate-400">{c.banco} · {c.tipo === 'corrente' ? 'C/C' : c.tipo === 'poupanca' ? 'Poupança' : c.tipo === 'investimento' ? 'Investimento' : 'Carteira'}</div>
                   </div>
                   <div className={`font-bold text-sm ${c.saldo >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                     {formatCurrency(c.saldo)}
@@ -346,7 +346,7 @@ export function Configuracoes() {
         </Card>
       )}
 
-      {/* â”€â”€â”€ Aba: BACKUP â”€â”€â”€ */}
+      {/* ─── Aba: BACKUP ─── */}
       {aba === 'dados' && (
         <div className="space-y-4 max-w-2xl mx-auto">
           <Card title="Resumo dos Dados">
@@ -355,10 +355,10 @@ export function Configuracoes() {
                 ['Pessoas', store.pessoas.length],
                 ['Produtos', store.produtos.length],
                 ['Fontes de Renda', store.fonteRendaCategorias.length],
-                ['Contas BancÃ¡rias', store.contasBancarias.length],
+                ['Contas Bancárias', store.contasBancarias.length],
                 ['Contas a Pagar', store.contasPagar.length],
                 ['Contas a Receber', store.contasReceber.length],
-                ['DÃ­vidas', store.dividas.length],
+                ['Dívidas', store.dividas.length],
                 ['Planejamentos', store.planejamentos.length],
               ].map(([k, v]) => (
                 <div key={String(k)} className="flex justify-between bg-slate-50 rounded-lg px-3 py-2">
@@ -369,18 +369,18 @@ export function Configuracoes() {
             </div>
           </Card>
 
-          <Card title="Dados de DemonstraÃ§Ã£o">
+          <Card title="Dados de Demonstração">
             <div className="p-5">
               <p className="text-sm text-slate-500 mb-4">Carregue dados de exemplo para explorar as funcionalidades.</p>
               <Button onClick={carregarDemo} variant="secondary" className="w-full">
-                {seeded ? <><CheckCircle size={16} className="text-emerald-500" /> Dados carregados!</> : <><Database size={16} /> Carregar DemonstraÃ§Ã£o</>}
+                {seeded ? <><CheckCircle size={16} className="text-emerald-500" /> Dados carregados!</> : <><Database size={16} /> Carregar Demonstração</>}
               </Button>
             </div>
           </Card>
 
-          <Card title="Backup e RestauraÃ§Ã£o">
+          <Card title="Backup e Restauração">
             <div className="p-5 space-y-3">
-              <p className="text-sm text-slate-500">Exporte todos os seus dados para JSON e importe quando necessÃ¡rio.</p>
+              <p className="text-sm text-slate-500">Exporte todos os seus dados para JSON e importe quando necessário.</p>
               <div className="flex gap-3">
                 <Button onClick={exportarDados} variant="secondary" className="flex-1"><Download size={15} /> Exportar</Button>
                 <Button onClick={importarDados} variant="secondary" className="flex-1"><Upload size={15} /> Importar</Button>
@@ -390,12 +390,12 @@ export function Configuracoes() {
         </div>
       )}
 
-      {/* â”€â”€â”€ Aba: SISTEMA â”€â”€â”€ */}
+      {/* ─── Aba: SISTEMA ─── */}
       {aba === 'sistema' && (
         <div className="max-w-2xl mx-auto space-y-4">
           <Card title="Sobre o Gestor Financeiro">
             <div className="p-5 flex items-start gap-4">
-              <div className="w-14 h-14 bg-emerald-500 rounded-2xl flex items-center justify-center flex-shrink-0 text-2xl">ðŸ’°</div>
+              <div className="w-14 h-14 bg-emerald-500 rounded-2xl flex items-center justify-center flex-shrink-0 text-2xl">💰</div>
               <div>
                 <h3 className="font-bold text-slate-800 text-lg">Gestor Financeiro</h3>
                 <p className="text-sm text-slate-500 mt-1">Dados armazenados localmente. 100% privado.</p>
@@ -419,7 +419,7 @@ export function Configuracoes() {
               ) : (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                   <div className="flex items-center gap-2 text-red-700 font-semibold mb-2">
-                    <Info size={16} /> Tem certeza? Esta aÃ§Ã£o nÃ£o pode ser desfeita.
+                    <Info size={16} /> Tem certeza? Esta ação não pode ser desfeita.
                   </div>
                   <div className="flex gap-3 mt-3">
                     <Button variant="secondary" onClick={() => setConfirmClear(false)} className="flex-1">Cancelar</Button>
@@ -434,14 +434,14 @@ export function Configuracoes() {
         </div>
       )}
 
-      {/* â”€â”€â”€ Modal Pessoa â”€â”€â”€ */}
+      {/* ─── Modal Pessoa ─── */}
       <Modal open={pModal} onClose={() => setPModal(false)} title={pEditId ? 'Editar Pessoa' : 'Nova Pessoa'} size="lg">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Nome *</label>
             <input value={pForm.nome} onChange={e => fp('nome', e.target.value)}
               className="fi"
-              placeholder="Nome completo ou razÃ£o social" autoFocus />
+              placeholder="Nome completo ou razão social" autoFocus />
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Tipo *</label>
@@ -468,9 +468,9 @@ export function Configuracoes() {
               className="fi" placeholder="email@exemplo.com" />
           </div>
           <div className="md:col-span-2">
-            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">EndereÃ§o</label>
+            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Endereço</label>
             <input value={pForm.endereco ?? ''} onChange={e => fp('endereco', e.target.value)}
-              className="fi" placeholder="Rua, nÃºmero, complemento" />
+              className="fi" placeholder="Rua, número, complemento" />
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Cidade</label>
@@ -490,7 +490,7 @@ export function Configuracoes() {
             </div>
           </div>
           <div className="md:col-span-2">
-            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">ObservaÃ§Ãµes</label>
+            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Observações</label>
             <textarea value={pForm.observacoes ?? ''} onChange={e => fp('observacoes', e.target.value)}
               rows={2} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-emerald-400 resize-none" />
           </div>
@@ -505,7 +505,7 @@ export function Configuracoes() {
         </div>
       </Modal>
 
-      {/* â”€â”€â”€ Modal Produto â”€â”€â”€ */}
+      {/* ─── Modal Produto ─── */}
       <Modal open={prModal} onClose={() => setPrModal(false)} title={prEditId ? 'Editar Produto' : 'Novo Produto'} size="sm">
         <div className="space-y-4">
           <div>
@@ -519,7 +519,7 @@ export function Configuracoes() {
             {store.fonteRendaCategorias.length === 0 ? (
               <div className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-3">
                 Cadastre uma Fonte de Renda primeiro.
-                <button onClick={() => { setPrModal(false); setAba('fontes'); openFNew() }} className="ml-1 underline font-medium">Cadastrar agora â†’</button>
+                <button onClick={() => { setPrModal(false); setAba('fontes'); openFNew() }} className="ml-1 underline font-medium">Cadastrar agora →</button>
               </div>
             ) : (
               <select value={prForm.fonteRendaId} onChange={e => fpr('fonteRendaId', e.target.value)}
@@ -541,13 +541,13 @@ export function Configuracoes() {
             })()}
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">DescriÃ§Ã£o</label>
+            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Descrição</label>
             <input value={prForm.descricao ?? ''} onChange={e => fpr('descricao', e.target.value)}
               className="fi"
               placeholder="Opcional..." />
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">PreÃ§o base (opcional)</label>
+            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Preço base (opcional)</label>
             <input type="number" value={prForm.precoBase ?? ''} onChange={e => fpr('precoBase', parseFloat(e.target.value) || undefined)}
               className="fi"
               placeholder="0,00" />
@@ -563,7 +563,7 @@ export function Configuracoes() {
         </div>
       </Modal>
 
-      {/* â”€â”€â”€ Modal Fonte de Renda â”€â”€â”€ */}
+      {/* ─── Modal Fonte de Renda ─── */}
       <Modal open={fModal} onClose={() => setFModal(false)} title={fEditId ? 'Editar Fonte' : 'Nova Fonte de Renda'} size="sm">
         <div className="space-y-4">
           <div>
@@ -573,7 +573,7 @@ export function Configuracoes() {
               placeholder="Ex: Action Max, Urbaninhos PC..." autoFocus />
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">DescriÃ§Ã£o</label>
+            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Descrição</label>
             <input value={fForm.descricao ?? ''} onChange={e => ff('descricao', e.target.value)}
               className="fi" />
           </div>
@@ -598,8 +598,8 @@ export function Configuracoes() {
         </div>
       </Modal>
 
-      {/* â”€â”€â”€ Modal Conta BancÃ¡ria â”€â”€â”€ */}
-      <Modal open={cModal} onClose={() => setCModal(false)} title={cEditId ? 'Editar Conta' : 'Nova Conta BancÃ¡ria'} size="sm">
+      {/* ─── Modal Conta Bancária ─── */}
+      <Modal open={cModal} onClose={() => setCModal(false)} title={cEditId ? 'Editar Conta' : 'Nova Conta Bancária'} size="sm">
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Nome da conta *</label>
@@ -611,20 +611,20 @@ export function Configuracoes() {
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Banco <span className="font-normal text-slate-400">(opcional)</span></label>
             <input value={cForm.banco} onChange={e => fc('banco', e.target.value)}
               className="fi"
-              placeholder="Nubank, ItaÃº, Banestesâ€¦" />
+              placeholder="Nubank, Itaú, Banestes…" />
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Tipo</label>
             <select value={cForm.tipo} onChange={e => fc('tipo', e.target.value)}
               className="fi">
               <option value="corrente">Conta Corrente</option>
-              <option value="poupanca">PoupanÃ§a</option>
+              <option value="poupanca">Poupança</option>
               <option value="investimento">Investimento</option>
               <option value="carteira">Carteira</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">AgÃªncia</label>
+            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Agência</label>
             <input value={cForm.agencia} onChange={e => fc('agencia', e.target.value)}
               className="fi" />
           </div>

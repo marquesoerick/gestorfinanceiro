@@ -10,11 +10,11 @@ import { Button } from '../components/ui/Button'
 import type { Planejamento, TipoPlano, FonteRenda } from '../types'
 
 const tipoOpcoes: { value: TipoPlano; label: string; icone: string }[] = [
-  { value: 'reserva_emergencia', label: 'Reserva de EmergÃªncia', icone: 'ðŸ›¡ï¸' },
-  { value: 'compra_carro', label: 'Compra de Carro', icone: 'ðŸš—' },
+  { value: 'reserva_emergencia', label: 'Reserva de Emergência', icone: 'ðŸ›¡ï¸' },
+  { value: 'compra_carro', label: 'Compra de Carro', icone: '🚗' },
   { value: 'viagem', label: 'Viagem', icone: 'âœˆï¸' },
   { value: 'aposentadoria', label: 'Aposentadoria', icone: 'ðŸ–ï¸' },
-  { value: 'outros', label: 'Outros', icone: 'ðŸŽ¯' },
+  { value: 'outros', label: 'Outros', icone: '🎯' },
 ]
 
 const cores = ['#10b981', '#6366f1', '#f97316', '#ec4899', '#0ea5e9', '#84cc16', '#f59e0b', '#8b5cf6']
@@ -22,7 +22,7 @@ const cores = ['#10b981', '#6366f1', '#f97316', '#ec4899', '#0ea5e9', '#84cc16',
 const emptyForm = (): Omit<Planejamento, 'id'> => ({
   nome: '', tipo: 'outros', descricao: '', valorMeta: 0, valorAtual: 0,
   dataInicio: toDateInput(), dataAlvo: toDateInput(), aporteMensal: 0,
-  fonte: 'pessoal', ativo: true, historico: [], cor: '#10b981', icone: 'ðŸŽ¯'
+  fonte: 'pessoal', ativo: true, historico: [], cor: '#10b981', icone: '🎯'
 })
 
 export function Planejamentos() {
@@ -172,7 +172,7 @@ export function Planejamentos() {
                         {p.nome}
                         {!p.ativo && <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">Inativo</span>}
                       </div>
-                      <div className="text-xs text-slate-400">{tipoInfo?.label} Â· {p.fonte}</div>
+                      <div className="text-xs text-slate-400">{tipoInfo?.label} · {p.fonte}</div>
                     </div>
                   </div>
                   <div className="text-right">
@@ -183,9 +183,9 @@ export function Planejamentos() {
 
                 <div className="mb-3">
                   <div className="flex justify-between text-xs mb-1">
-                    <span className="text-slate-500">{pct.toFixed(1)}% concluÃ­do</span>
+                    <span className="text-slate-500">{pct.toFixed(1)}% concluído</span>
                     <span className="text-slate-500">
-                      {mesesRestantes > 0 ? `~${mesesRestantes} meses restantes` : pct >= 100 ? 'âœ“ Meta atingida!' : 'Sem aporte definido'}
+                      {mesesRestantes > 0 ? `~${mesesRestantes} meses restantes` : pct >= 100 ? '✓ Meta atingida!' : 'Sem aporte definido'}
                     </span>
                   </div>
                   <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
@@ -206,7 +206,7 @@ export function Planejamentos() {
                     </Button>
                   )}
                   <Button size="sm" variant="ghost" onClick={() => setDetalhesId(detalhesId === p.id ? null : p.id)}>
-                    HistÃ³rico ({p.historico.length})
+                    Histórico ({p.historico.length})
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => openEdit(p)}><Pencil size={13} /></Button>
                   <Button size="sm" variant="ghost" onClick={() => deletePlanejamento(p.id)} className="text-red-500"><Trash2 size={13} /></Button>
@@ -236,14 +236,14 @@ export function Planejamentos() {
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Nome do Plano *</label>
-            <input value={form.nome} onChange={e => f('nome', e.target.value)} className="fi" placeholder="Ex: Reserva EmergÃªncia, Viagem Europa..." />
+            <input value={form.nome} onChange={e => f('nome', e.target.value)} className="fi" placeholder="Ex: Reserva Emergência, Viagem Europa..." />
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Tipo</label>
             <select value={form.tipo} onChange={e => {
               const tipo = e.target.value as TipoPlano
               const info = tipoOpcoes.find(t => t.value === tipo)
-              f('tipo', tipo); f('icone', info?.icone ?? 'ðŸŽ¯')
+              f('tipo', tipo); f('icone', info?.icone ?? '🎯')
             }} className="fi">
               {tipoOpcoes.map(t => <option key={t.value} value={t.value}>{t.icone} {t.label}</option>)}
             </select>
@@ -267,13 +267,13 @@ export function Planejamentos() {
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
               Aporte Mensal
               {aportePreview.length > 0 && (
-                <span className="ml-2 text-emerald-600 font-normal">â†’ {aportePreview.length} aportes</span>
+                <span className="ml-2 text-emerald-600 font-normal">→ {aportePreview.length} aportes</span>
               )}
             </label>
             <input type="number" value={form.aporteMensal || ''} onChange={e => f('aporteMensal', parseFloat(e.target.value))} className="fi" />
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Data InÃ­cio</label>
+            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Data Início</label>
             <input type="date" value={form.dataInicio} onChange={e => f('dataInicio', e.target.value)} className="fi" />
           </div>
           <div>
@@ -291,7 +291,7 @@ export function Planejamentos() {
             </div>
           </div>
           <div className="col-span-2">
-            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">DescriÃ§Ã£o</label>
+            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Descrição</label>
             <textarea value={form.descricao} onChange={e => f('descricao', e.target.value)} rows={2} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-emerald-400 resize-none" />
           </div>
           <label className="flex items-center gap-2 cursor-pointer">
@@ -299,7 +299,7 @@ export function Planejamentos() {
             <span className="text-sm text-slate-600">Plano ativo</span>
           </label>
 
-          {/* Checkbox diluiÃ§Ã£o */}
+          {/* Checkbox diluição */}
           {!editId && aportePreview.length > 0 && (
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={gerarContasPagar} onChange={e => setGerarContasPagar(e.target.checked)} className="rounded" />
@@ -312,13 +312,13 @@ export function Planejamentos() {
             <div className="col-span-2">
               <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
                 <div className="text-xs font-semibold text-indigo-700 mb-2 flex items-center gap-1">
-                  <CheckCircle size={12} /> {aportePreview.length} aportes serÃ£o lanÃ§ados em Contas a Pagar:
+                  <CheckCircle size={12} /> {aportePreview.length} aportes serão lançados em Contas a Pagar:
                 </div>
                 <div className="space-y-1 max-h-36 overflow-y-auto">
                   {aportePreview.slice(0, 5).map((a, i) => (
                     <div key={i} className="flex items-center justify-between text-xs bg-white rounded-lg px-3 py-1.5 border border-indigo-100">
                       <span className="font-medium text-slate-700">{a.descricao}</span>
-                      <span className="text-slate-500">{mesesLongos[a.mes - 1]}/{a.ano} Â· {formatCurrency(a.valor)}</span>
+                      <span className="text-slate-500">{mesesLongos[a.mes - 1]}/{a.ano} · {formatCurrency(a.valor)}</span>
                     </div>
                   ))}
                   {aportePreview.length > 5 && (
@@ -350,7 +350,7 @@ export function Planejamentos() {
               <input value={valorAporte} onChange={e => setValorAporte(e.target.value)} placeholder={formatCurrency(aporteModal.aporteMensal)} className="fi" />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">ObservaÃ§Ãµes</label>
+              <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Observações</label>
               <input value={obsAporte} onChange={e => setObsAporte(e.target.value)} className="fi" />
             </div>
             <div className="flex gap-3">
