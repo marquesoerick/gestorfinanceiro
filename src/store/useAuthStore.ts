@@ -138,13 +138,29 @@ export const useAuthStore = create<AuthStore>()(
         if (signUpError) return { success: false, error: friendlyError(signUpError.message) }
 
         const newUserId = signUpData.user?.id
+        if (!newUserId) return { success: false, error: 'Usuário criado mas ID não retornado.' }
 
-        // Atualiza perfil do novo usuário usando o cliente principal (sessão admin intacta)
-        if (newUserId) {
-          await supabase.from('user_profiles')
-            .update({ username: usernameToUse, nome: nome.trim() })
-            .eq('id', newUserId)
-        }
+        // Cria/atualiza perfil usando supabaseAux (tem sessão do novo usuário em memória)
+        // Não depende do trigger on_auth_user_created
+        const { error: upsertError } = await supabaseAux.from('user_profiles').upsert({
+          id: newUserId,
+          nome: nome.trim(),
+          username: usernameToUse,
+          email: email.trim(),
+        }, { onConflict: 'id' })
+
+        if (upsertError) return { success: false, error: `Erro ao salvar perfil: ${upsertError.message}` }
+
+        // Atualiza assinatura usando o cliente principal (sessão admin)
+        await supabase.rpc('admin_update_assinatura', {
+          p_user_id: newUserId,
+          p_status: 'teste',
+          p_plano: 'basico',
+          p_expira_em: null,
+          p_observacoes: null,
+        }).then(({ error }) => {
+          if (error) console.warn('admin_update_assinatura:', error.message)
+        })
 
         await get().fetchUsers()
         return { success: true, userId: newUserId }
