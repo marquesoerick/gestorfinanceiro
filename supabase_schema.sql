@@ -383,16 +383,11 @@ create policy "profile_delete" on public.user_profiles
   for delete using (auth.uid() = id);
 
 -- Admin pode ver e atualizar qualquer perfil
+-- Usa função security definer para evitar recursão infinita no RLS
 create policy "admin_profile_select" on public.user_profiles
-  for select using (
-    exists (select 1 from public.user_profiles where id = auth.uid() and is_admin = true)
-  );
+  for select using (public.is_admin());
 create policy "admin_profile_update" on public.user_profiles
-  for update using (
-    exists (select 1 from public.user_profiles where id = auth.uid() and is_admin = true)
-  ) with check (
-    exists (select 1 from public.user_profiles where id = auth.uid() and is_admin = true)
-  );
+  for update using (public.is_admin()) with check (public.is_admin());
 
 -- pessoas
 create policy "pessoas_select" on public.pessoas

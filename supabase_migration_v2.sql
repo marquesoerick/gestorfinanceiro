@@ -15,7 +15,17 @@ alter table public.dividas
     ));
 
 
--- ─── 2. Políticas RLS para user_profiles ────────────────────
+-- ─── 2. Função is_admin() — evita recursão infinita no RLS ──
+create or replace function public.is_admin()
+returns boolean language sql security definer stable
+set search_path = public as $$
+  select exists (
+    select 1 from public.user_profiles
+    where id = auth.uid() and is_admin = true
+  );
+$$;
+
+-- ─── 3. Políticas RLS para user_profiles ────────────────────
 -- Remove e recria todas para garantir consistência
 drop policy if exists "profile_select"       on public.user_profiles;
 drop policy if exists "profile_insert"       on public.user_profiles;
@@ -23,6 +33,7 @@ drop policy if exists "profile_update"       on public.user_profiles;
 drop policy if exists "profile_delete"       on public.user_profiles;
 drop policy if exists "admin_profile_select" on public.user_profiles;
 drop policy if exists "admin_profile_update" on public.user_profiles;
+drop policy if exists "own_profile"          on public.user_profiles;
 
 -- Usuário lê/edita o próprio perfil
 create policy "profile_select" on public.user_profiles
@@ -37,18 +48,12 @@ create policy "profile_update" on public.user_profiles
 create policy "profile_delete" on public.user_profiles
   for delete using (auth.uid() = id);
 
--- Admin vê e atualiza qualquer perfil
+-- Admin vê e atualiza qualquer perfil (sem recursão)
 create policy "admin_profile_select" on public.user_profiles
-  for select using (
-    exists (select 1 from public.user_profiles p where p.id = auth.uid() and p.is_admin = true)
-  );
+  for select using (public.is_admin());
 
 create policy "admin_profile_update" on public.user_profiles
-  for update using (
-    exists (select 1 from public.user_profiles p where p.id = auth.uid() and p.is_admin = true)
-  ) with check (
-    exists (select 1 from public.user_profiles p where p.id = auth.uid() and p.is_admin = true)
-  );
+  for update using (public.is_admin()) with check (public.is_admin());
 
 
 -- ─── 3. Funções (CREATE OR REPLACE = idempotente) ────────────
