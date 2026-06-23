@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/useAuthStore'
 import { Layout } from './components/Layout/Layout'
@@ -18,7 +19,15 @@ import { Admin } from './pages/Admin'
 import { ResetSenha } from './pages/ResetSenha'
 
 function App() {
-  const { currentUserId } = useAuthStore()
+  const { currentUserId, initializeAuth, loading } = useAuthStore()
+
+  useEffect(() => {
+    initializeAuth()
+  }, [initializeAuth])
+
+  if (loading) {
+    return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-emerald-500 font-bold">Carregando...</div>
+  }
 
   return (
     <BrowserRouter>
