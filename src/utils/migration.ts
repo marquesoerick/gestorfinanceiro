@@ -12,11 +12,23 @@ export async function migrateLocalStorageToSupabase(userId: string) {
 
     console.log('Iniciando migração de dados...')
 
+    // Mapeamento de IDs antigos (string aleatória) para novos UUIDs
+    const idMap = new Map<string, string>()
+    const mapId = (oldId: string | null | undefined): string | null => {
+      if (!oldId) return null
+      // Se já for UUID válido, retorna ele mesmo
+      if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(oldId)) return oldId
+      if (!idMap.has(oldId)) {
+        idMap.set(oldId, crypto.randomUUID())
+      }
+      return idMap.get(oldId)!
+    }
+
     // 1. Fonte Renda Categorias
     if (state.fonteRendaCategorias?.length) {
       const { error } = await supabase.from('fonte_renda_categorias').upsert(
         state.fonteRendaCategorias.map((c: any) => ({
-          id: c.id,
+          id: mapId(c.id),
           user_id: userId,
           nome: c.nome,
           descricao: c.descricao,
@@ -31,7 +43,7 @@ export async function migrateLocalStorageToSupabase(userId: string) {
     if (state.fontesRenda?.length) {
       const { error } = await supabase.from('fontes_renda').upsert(
         state.fontesRenda.map((f: any) => ({
-          id: f.id,
+          id: mapId(f.id),
           user_id: userId,
           nome: f.nome,
           tipo: f.tipo,
@@ -47,7 +59,7 @@ export async function migrateLocalStorageToSupabase(userId: string) {
     if (state.pessoas?.length) {
       const { error } = await supabase.from('pessoas').upsert(
         state.pessoas.map((p: any) => ({
-          id: p.id,
+          id: mapId(p.id),
           user_id: userId,
           nome: p.nome,
           tipo: p.tipo,
@@ -69,10 +81,10 @@ export async function migrateLocalStorageToSupabase(userId: string) {
     if (state.produtos?.length) {
       const { error } = await supabase.from('produtos').upsert(
         state.produtos.map((p: any) => ({
-          id: p.id,
+          id: mapId(p.id),
           user_id: userId,
           nome: p.nome,
-          fonte_renda_id: p.fonteRendaId || null,
+          fonte_renda_id: mapId(p.fonteRendaId),
           descricao: p.descricao,
           preco_base: p.precoBase,
           ativo: p.ativo !== false
@@ -85,7 +97,7 @@ export async function migrateLocalStorageToSupabase(userId: string) {
     if (state.contasBancarias?.length) {
       const { error } = await supabase.from('contas_bancarias').upsert(
         state.contasBancarias.map((c: any) => ({
-          id: c.id,
+          id: mapId(c.id),
           user_id: userId,
           nome: c.nome,
           banco: c.banco,
@@ -105,9 +117,9 @@ export async function migrateLocalStorageToSupabase(userId: string) {
     if (state.transacoesBancarias?.length) {
       const { error } = await supabase.from('transacoes_bancarias').upsert(
         state.transacoesBancarias.map((t: any) => ({
-          id: t.id,
+          id: mapId(t.id),
           user_id: userId,
-          conta_bancaria_id: t.contaBancariaId,
+          conta_bancaria_id: mapId(t.contaBancariaId),
           data: t.data,
           tipo: t.tipo,
           valor: t.valor,
@@ -123,7 +135,7 @@ export async function migrateLocalStorageToSupabase(userId: string) {
     if (state.planejamentos?.length) {
       const { error } = await supabase.from('planejamentos').upsert(
         state.planejamentos.map((p: any) => ({
-          id: p.id,
+          id: mapId(p.id),
           user_id: userId,
           nome: p.nome,
           tipo: p.tipo,
@@ -147,8 +159,8 @@ export async function migrateLocalStorageToSupabase(userId: string) {
         if (p.historico?.length) {
           p.historico.forEach((a: any) => {
             aportes.push({
-              id: a.id,
-              planejamento_id: p.id,
+              id: mapId(a.id),
+              planejamento_id: mapId(p.id),
               data: a.data,
               valor: a.valor,
               descricao: a.descricao
@@ -167,14 +179,14 @@ export async function migrateLocalStorageToSupabase(userId: string) {
     if (state.contasPagar?.length) {
       const { error } = await supabase.from('contas_pagar').upsert(
         state.contasPagar.map((c: any) => ({
-          id: c.id,
+          id: mapId(c.id),
           user_id: userId,
           descricao: c.descricao,
           valor: c.valor,
           vencimento: c.vencimento,
           status: c.status,
           categoria: c.categoria,
-          conta_bancaria_id: c.contaBancariaId || null,
+          conta_bancaria_id: mapId(c.contaBancariaId),
           data_pagamento: c.dataPagamento || null,
           valor_pago: c.valorPago || null,
           comprovante_url: c.comprovanteUrl || null,
@@ -182,9 +194,9 @@ export async function migrateLocalStorageToSupabase(userId: string) {
           mes_referencia: c.mesReferencia || null,
           ano_referencia: c.anoReferencia || null,
           origem: c.origem || 'manual',
-          origem_id: c.origemId || null,
-          fonte_renda_id: c.fonteRendaId || null,
-          pessoa_id: c.pessoaId || null,
+          origem_id: mapId(c.origemId),
+          fonte_renda_id: mapId(c.fonteRendaId),
+          pessoa_id: mapId(c.pessoaId),
           recorrente: c.recorrente === true
         }))
       )
@@ -195,21 +207,21 @@ export async function migrateLocalStorageToSupabase(userId: string) {
     if (state.contasReceber?.length) {
       const { error } = await supabase.from('contas_receber').upsert(
         state.contasReceber.map((c: any) => ({
-          id: c.id,
+          id: mapId(c.id),
           user_id: userId,
           descricao: c.descricao,
           valor: c.valor,
           vencimento: c.vencimento,
           status: c.status,
-          pessoa_id: c.pessoaId || null,
-          conta_bancaria_id: c.contaBancariaId || null,
+          pessoa_id: mapId(c.pessoaId),
+          conta_bancaria_id: mapId(c.contaBancariaId),
           valor_recebido: c.valorRecebido || 0,
           data_recebimento: c.dataRecebimento || null,
           observacoes: c.observacoes || null,
           itens: c.itens || [],
           parcela_atual: c.parcelaAtual || 1,
           total_parcelas: c.totalParcelas || 1,
-          grupo_id: c.grupoId || null
+          grupo_id: mapId(c.grupoId)
         }))
       )
       if (error) throw new Error(`Erro contas_receber: ${error.message}`)
@@ -219,8 +231,8 @@ export async function migrateLocalStorageToSupabase(userId: string) {
         if (c.pagamentosRecebidos?.length) {
           c.pagamentosRecebidos.forEach((p: any) => {
             pagamentosReceber.push({
-              id: p.id,
-              conta_receber_id: c.id,
+              id: mapId(p.id),
+              conta_receber_id: mapId(c.id),
               data: p.data,
               valor: p.valor,
               forma_pagamento: p.formaPagamento,
