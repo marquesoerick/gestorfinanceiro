@@ -99,29 +99,30 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       fetchUsers: async () => {
-        const { data, error } = await supabase.rpc('admin_list_users')
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .order('created_at', { ascending: false })
         if (error) {
           console.error('fetchUsers error:', error.message)
           return
         }
-        if (data) {
-          const mappedUsers: AuthUser[] = (data as any[]).map(u => ({
-            id: u.id,
-            nome: u.nome || u.email?.split('@')[0] || 'Sem Nome',
-            username: u.username || u.email?.split('@')[0] || 'usuario',
-            email: u.email,
-            is_admin: u.is_admin,
-            createdAt: u.created_at,
-            assinatura: {
-              status: (u.assinatura_status as StatusAssinatura) || 'teste',
-              plano: (u.assinatura_plano as PlanoAssinatura) || 'basico',
-              expiraEm: u.assinatura_expira_em,
-              observacoes: u.assinatura_observacoes,
-              criadaEm: u.created_at
-            }
-          }))
-          set({ users: mappedUsers })
-        }
+        const mappedUsers: AuthUser[] = (data ?? []).map(u => ({
+          id: u.id,
+          nome: u.nome || u.email?.split('@')[0] || 'Sem Nome',
+          username: u.username || u.email?.split('@')[0] || 'usuario',
+          email: u.email,
+          is_admin: u.is_admin,
+          createdAt: u.created_at,
+          assinatura: {
+            status: (u.assinatura_status as StatusAssinatura) || 'teste',
+            plano: (u.assinatura_plano as PlanoAssinatura) || 'basico',
+            expiraEm: u.assinatura_expira_em,
+            observacoes: u.assinatura_observacoes,
+            criadaEm: u.assinatura_criada_em ?? u.created_at
+          }
+        }))
+        set({ users: mappedUsers })
       },
 
       addUser: async (email, password, nome, username) => {
@@ -130,7 +131,7 @@ export const useAuthStore = create<AuthStore>()(
 
         const usernameToUse = username?.trim() || email.split('@')[0]
 
-        // Usa cliente auxiliar (persistSession: false) para não afetar sessão do admin
+        // Cliente auxiliar não persiste sessão — admin nunca é deslogado
         const { data: signUpData, error: signUpError } = await supabaseAux.auth.signUp({
           email: email.trim(),
           password,
@@ -142,8 +143,7 @@ export const useAuthStore = create<AuthStore>()(
         const newUserId = signUpData.user?.id
         if (!newUserId) return { success: false, error: 'Usuário criado mas ID não retornado.' }
 
-        // Cria/atualiza perfil usando supabaseAux (tem sessão do novo usuário em memória)
-        // Não depende do trigger on_auth_user_created
+        // supabaseAux tem sessão do novo usuário em memória — pode escrever o próprio perfil
         const { error: upsertError } = await supabaseAux.from('user_profiles').upsert({
           id: newUserId,
           nome: nome.trim(),
@@ -153,18 +153,6 @@ export const useAuthStore = create<AuthStore>()(
 
         if (upsertError) return { success: false, error: `Erro ao salvar perfil: ${upsertError.message}` }
 
-        // Atualiza assinatura usando o cliente principal (sessão admin)
-        await supabase.rpc('admin_update_assinatura', {
-          p_user_id: newUserId,
-          p_status: 'teste',
-          p_plano: 'basico',
-          p_expira_em: null,
-          p_observacoes: null,
-        }).then(({ error }) => {
-          if (error) console.warn('admin_update_assinatura:', error.message)
-        })
-
-        await get().fetchUsers()
         return { success: true, userId: newUserId }
       },
 
@@ -202,23 +190,20 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       updateUser: async (userId, updates) => {
+        const profileUpdate: Record<string, unknown> = {}
+        if (updates.nome !== undefined) profileUpdate.nome = updates.nome
+        if (updates.email !== undefined) profileUpdate.email = updates.email
         if (updates.assinatura) {
-          await supabase.rpc('admin_update_assinatura', {
-            p_user_id: userId,
-            p_status: updates.assinatura.status,
-            p_plano: updates.assinatura.plano,
-            p_expira_em: updates.assinatura.expiraEm,
-            p_observacoes: updates.assinatura.observacoes
-          })
+          profileUpdate.assinatura_status = updates.assinatura.status
+          profileUpdate.assinatura_plano = updates.assinatura.plano
+          profileUpdate.assinatura_expira_em = updates.assinatura.expiraEm || null
+          profileUpdate.assinatura_observacoes = updates.assinatura.observacoes || null
         }
-
-        if (updates.nome !== undefined || updates.email !== undefined) {
-          await supabase.from('user_profiles').update({
-            nome: updates.nome,
-            email: updates.email
-          }).eq('id', userId)
-        }
-
+        const { error } = await supabase
+          .from('user_profiles')
+          .update(profileUpdate)
+          .eq('id', userId)
+        if (error) console.error('updateUser error:', error.message)
         await get().fetchUsers()
       },
 
