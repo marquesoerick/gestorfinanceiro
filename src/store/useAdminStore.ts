@@ -1,8 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-const hashAdminPw = (pw: string) => btoa(encodeURIComponent(pw + 'gsf-admin-2026'))
-
 export interface ResetToken {
   userId: string
   expiraEm: string
@@ -10,12 +8,7 @@ export interface ResetToken {
 }
 
 interface AdminStore {
-  adminPasswordHash: string
-  isAuthenticated: boolean
   resetTokens: Record<string, ResetToken>
-  loginAdmin: (password: string) => boolean
-  logoutAdmin: () => void
-  changeAdminPassword: (oldPw: string, newPw: string) => boolean
   generateResetToken: (userId: string) => string
   consumeResetToken: (token: string) => string | null
 }
@@ -23,25 +16,7 @@ interface AdminStore {
 export const useAdminStore = create<AdminStore>()(
   persist(
     (set, get) => ({
-      adminPasswordHash: hashAdminPw('admin@2026'),
-      isAuthenticated: false,
       resetTokens: {},
-
-      loginAdmin: (pw) => {
-        if (hashAdminPw(pw) === get().adminPasswordHash) {
-          set({ isAuthenticated: true })
-          return true
-        }
-        return false
-      },
-
-      logoutAdmin: () => set({ isAuthenticated: false }),
-
-      changeAdminPassword: (oldPw, newPw) => {
-        if (hashAdminPw(oldPw) !== get().adminPasswordHash) return false
-        set({ adminPasswordHash: hashAdminPw(newPw) })
-        return true
-      },
 
       generateResetToken: (userId) => {
         const token = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2) + Date.now().toString(36)

@@ -48,19 +48,25 @@ type ModalType =
   | { kind: 'excluir'; user: AuthUser }
   | { kind: 'config' }
 
-// ─── Admin Login ─────────────────────────────────────────────────────────────
+// ─── Admin Login (via Supabase) ───────────────────────────────────────────────
 function AdminLogin() {
-  const { loginAdmin } = useAdminStore()
+  const { login } = useAuthStore()
+  const [email, setEmail] = useState('')
   const [pw, setPw] = useState('')
   const [show, setShow] = useState(false)
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!loginAdmin(pw)) {
-      setError('Senha incorreta')
-      setPw('')
+    setError('')
+    setLoading(true)
+    const result = await login(email.trim(), pw)
+    setLoading(false)
+    if (!result.success) {
+      setError(result.error ?? 'Credenciais inválidas')
     }
+    // Se sucesso, onAuthStateChange atualiza currentUser → Admin re-renderiza
   }
 
   return (
@@ -82,7 +88,20 @@ function AdminLogin() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-                Senha do Administrador
+                E-mail do Administrador
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => { setEmail(e.target.value); setError('') }}
+                placeholder="admin@exemplo.com"
+                autoFocus
+                className={INP}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+                Senha
               </label>
               <div className="relative">
                 <input
@@ -90,7 +109,6 @@ function AdminLogin() {
                   value={pw}
                   onChange={e => { setPw(e.target.value); setError('') }}
                   placeholder="••••••••"
-                  autoFocus
                   className={`${INP} pr-10`}
                 />
                 <button
@@ -112,16 +130,36 @@ function AdminLogin() {
 
             <button
               type="submit"
-              className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl text-sm transition-colors shadow-lg shadow-indigo-200"
+              disabled={loading}
+              className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-50 text-white font-bold rounded-xl text-sm transition-colors shadow-lg shadow-indigo-200"
             >
-              Acessar Painel
+              {loading ? 'Autenticando...' : 'Acessar Painel'}
             </button>
           </form>
 
           <p className="text-center text-xs text-slate-400 mt-4">
-            Senha padrão: <span className="font-mono font-semibold text-slate-600">admin@2026</span>
+            Use as credenciais da conta administradora no Supabase.
           </p>
         </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Acesso negado ────────────────────────────────────────────────────────────
+function AcessoNegado({ onLogout }: { onLogout: () => void }) {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-red-950 to-slate-900 flex items-center justify-center p-4">
+      <div className="text-center">
+        <AlertTriangle size={48} className="text-red-400 mx-auto mb-4" />
+        <h1 className="text-xl font-bold text-white mb-2">Acesso Negado</h1>
+        <p className="text-slate-400 text-sm mb-6">Esta conta não tem permissão de administrador.</p>
+        <button
+          onClick={onLogout}
+          className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl text-sm transition-colors"
+        >
+          Sair
+        </button>
       </div>
     </div>
   )
@@ -159,20 +197,25 @@ function ModalNovoUsuario({ onClose }: { onClose: () => void }) {
   const [expiraEm, setExpiraEm] = useState('')
   const [observacoes, setObservacoes] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const handleSave = async () => {
     if (!nome.trim() || !username.trim() || !senha) {
       setError('Nome, usuário e senha são obrigatórios')
       return
     }
+    setLoading(true)
     const emailToUse = email.trim() || `${username.trim()}@gestorfinanceiro.com`
     const result = await addUser(emailToUse, senha, nome.trim())
-    if (!result.success) { setError(result.error ?? 'Erro ao criar usuário'); return }
+    if (!result.success) {
+      setError(result.error ?? 'Erro ao criar usuário')
+      setLoading(false)
+      return
+    }
 
-    // Find the newly created user
-    const newUser = useAuthStore.getState().users.find(u => u.username === username.trim().toLowerCase())
-    if (newUser) {
-      updateUser(newUser.id, {
+    // Atualiza assinatura com o UUID retornado pelo signUp
+    if (result.userId) {
+      await updateUser(result.userId, {
         email: email.trim() || undefined,
         assinatura: {
           status,
@@ -182,10 +225,9 @@ function ModalNovoUsuario({ onClose }: { onClose: () => void }) {
           criadaEm: new Date().toISOString(),
         },
       })
-      // addUser auto-logs in as the new user — always revert to null since admin panel
-      // is completely separate from the finance app; admin never logs into finance here
-      useAuthStore.setState({ currentUserId: null })
     }
+
+    setLoading(false)
     onClose()
   }
 
@@ -206,7 +248,7 @@ function ModalNovoUsuario({ onClose }: { onClose: () => void }) {
         </div>
         <div>
           <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Senha *</label>
-          <input className={INP} type="password" value={senha} onChange={e => setSenha(e.target.value)} placeholder="Mínimo 4 caracteres" />
+          <input className={INP} type="password" value={senha} onChange={e => setSenha(e.target.value)} placeholder="Mínimo 6 caracteres" />
         </div>
 
         <div className="border-t border-slate-100 pt-4">
@@ -251,8 +293,8 @@ function ModalNovoUsuario({ onClose }: { onClose: () => void }) {
           <button onClick={onClose} className="flex-1 py-2.5 border border-slate-200 text-slate-600 font-semibold rounded-xl text-sm hover:bg-slate-50 transition-colors">
             Cancelar
           </button>
-          <button onClick={handleSave} className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm transition-colors">
-            Criar Usuário
+          <button onClick={handleSave} disabled={loading} className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-semibold rounded-xl text-sm transition-colors">
+            {loading ? 'Criando...' : 'Criar Usuário'}
           </button>
         </div>
       </div>
@@ -382,7 +424,7 @@ function ModalResetLink({ user, onClose }: { user: AuthUser; onClose: () => void
   )
 }
 
-// ─── Modal: Alterar Senha (admin reseta senha do usuário) ─────────────────────
+// ─── Modal: Alterar Senha ─────────────────────────────────────────────────────
 function ModalAlterarSenha({ user, onClose }: { user: AuthUser; onClose: () => void }) {
   const { changePassword } = useAuthStore()
   const [pw, setPw] = useState('')
@@ -391,10 +433,11 @@ function ModalAlterarSenha({ user, onClose }: { user: AuthUser; onClose: () => v
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
-  const handleSave = () => {
-    if (!pw || pw.length < 4) { setError('Senha deve ter ao menos 4 caracteres'); return }
+  const handleSave = async () => {
+    if (!pw || pw.length < 6) { setError('Senha deve ter ao menos 6 caracteres'); return }
     if (pw !== pw2) { setError('As senhas não coincidem'); return }
-    changePassword(pw)
+    const result = await changePassword(pw)
+    if (!result.success) { setError(result.error ?? 'Erro ao alterar senha'); return }
     setSuccess(true)
     setTimeout(onClose, 1200)
   }
@@ -409,6 +452,10 @@ function ModalAlterarSenha({ user, onClose }: { user: AuthUser; onClose: () => v
           </div>
         ) : (
           <>
+            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-2 text-amber-700 text-sm">
+              <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
+              <span>Esta ação altera a senha da conta admin atual. Para redefinir a senha de outro usuário, use o <strong>Reset Link</strong>.</span>
+            </div>
             <div>
               <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Nova Senha *</label>
               <div className="relative">
@@ -499,26 +546,25 @@ function ModalExcluirUsuario({ user, onClose }: { user: AuthUser; onClose: () =>
 
 // ─── Modal: Configurações Admin ───────────────────────────────────────────────
 function ModalConfig({ onClose }: { onClose: () => void }) {
-  const { changeAdminPassword } = useAdminStore()
-  const [oldPw, setOldPw] = useState('')
+  const { changePassword } = useAuthStore()
   const [newPw, setNewPw] = useState('')
   const [confirmPw, setConfirmPw] = useState('')
   const [show, setShow] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
-  const handleSave = () => {
-    if (!oldPw || !newPw || !confirmPw) { setError('Preencha todos os campos'); return }
+  const handleSave = async () => {
+    if (!newPw || !confirmPw) { setError('Preencha todos os campos'); return }
     if (newPw.length < 6) { setError('Nova senha deve ter ao menos 6 caracteres'); return }
     if (newPw !== confirmPw) { setError('As senhas não coincidem'); return }
-    const ok = changeAdminPassword(oldPw, newPw)
-    if (!ok) { setError('Senha atual incorreta'); return }
+    const result = await changePassword(newPw)
+    if (!result.success) { setError(result.error ?? 'Erro ao alterar senha'); return }
     setSuccess(true)
     setTimeout(onClose, 1500)
   }
 
   return (
-    <Modal title="Configurações do Administrador" onClose={onClose}>
+    <Modal title="Alterar Senha do Admin" onClose={onClose}>
       <div className="space-y-4">
         {success ? (
           <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-4 rounded-xl flex items-center gap-2">
@@ -528,24 +574,20 @@ function ModalConfig({ onClose }: { onClose: () => void }) {
         ) : (
           <>
             <div>
-              <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Senha Atual *</label>
+              <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Nova Senha *</label>
               <div className="relative">
                 <input
                   className={`${INP} pr-10`}
                   type={show ? 'text' : 'password'}
-                  value={oldPw}
-                  onChange={e => { setOldPw(e.target.value); setError('') }}
-                  placeholder="Senha atual"
+                  value={newPw}
+                  onChange={e => { setNewPw(e.target.value); setError('') }}
+                  placeholder="Nova senha (min. 6 chars)"
                   autoFocus
                 />
                 <button type="button" onClick={() => setShow(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                   {show ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Nova Senha *</label>
-              <input className={INP} type={show ? 'text' : 'password'} value={newPw} onChange={e => { setNewPw(e.target.value); setError('') }} placeholder="Nova senha (min. 6 chars)" />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Confirmar Nova Senha *</label>
@@ -597,18 +639,19 @@ function ActionBtn({ onClick, title, className, children }: { onClick: () => voi
 
 // ─── Main Admin Panel ─────────────────────────────────────────────────────────
 export function Admin() {
-  const { isAuthenticated, logoutAdmin } = useAdminStore()
-  const { users, fetchUsers } = useAuthStore()
+  const { currentUser, users, fetchUsers, logout } = useAuthStore()
   const [modal, setModal] = useState<ModalType>({ kind: 'none' })
 
-  // Fetch users on mount if authenticated
+  const isAdmin = currentUser?.is_admin === true
+
   React.useEffect(() => {
-    if (isAuthenticated) {
+    if (isAdmin) {
       fetchUsers()
     }
-  }, [isAuthenticated, fetchUsers])
+  }, [isAdmin, fetchUsers])
 
-  if (!isAuthenticated) return <AdminLogin />
+  if (!currentUser) return <AdminLogin />
+  if (!isAdmin) return <AcessoNegado onLogout={logout} />
 
   // KPI stats
   const totalUsers = users.length
@@ -629,7 +672,7 @@ export function Admin() {
             </div>
             <div>
               <h1 className="font-bold text-lg leading-tight">Painel Administrativo</h1>
-              <p className="text-indigo-300 text-xs">Gestor Financeiro</p>
+              <p className="text-indigo-300 text-xs">{currentUser.nome}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -641,7 +684,7 @@ export function Admin() {
               <span className="hidden sm:inline">Configurações</span>
             </button>
             <button
-              onClick={logoutAdmin}
+              onClick={logout}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-sm font-medium transition-colors"
             >
               <LogOut size={14} />
@@ -721,7 +764,8 @@ export function Admin() {
             {users.length === 0 ? (
               <div className="py-12 text-center text-slate-400">
                 <Users size={32} className="mx-auto mb-3 opacity-30" />
-                <p className="text-sm">Nenhum usuário cadastrado</p>
+                <p className="text-sm">Nenhum usuário encontrado</p>
+                <p className="text-xs mt-1 text-slate-300">A lista carrega após o login da conta admin no Supabase</p>
               </div>
             ) : (
               <table className="w-full text-sm">
@@ -789,7 +833,7 @@ export function Admin() {
             {users.length === 0 ? (
               <div className="py-10 text-center text-slate-400">
                 <Users size={28} className="mx-auto mb-2 opacity-30" />
-                <p className="text-sm">Nenhum usuário cadastrado</p>
+                <p className="text-sm">Nenhum usuário encontrado</p>
               </div>
             ) : (
               users.map(u => (

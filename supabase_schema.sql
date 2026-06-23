@@ -215,6 +215,12 @@ create table public.dividas (
   status          text not null default 'ativa'
                     check (status in ('ativa','quitada','renegociada')),
   fonte           text not null default 'pessoal' check (fonte in ('empresa','pessoal')),
+  grupo           text not null default 'divida'
+                    check (grupo in (
+                      'casa','carro','viagens','alimentacao','saude',
+                      'educacao','lazer','outros',
+                      'reserva_emergencia','aposentadoria','divida'
+                    )),
   parcelas        int not null,
   parcela_atual   int not null default 1,
   valor_parcela   numeric(12,2) not null,
@@ -222,6 +228,10 @@ create table public.dividas (
   created_at      timestamptz default now(),
   updated_at      timestamptz default now()
 );
+
+-- Se o schema já foi aplicado, rodar este ALTER para adicionar a coluna:
+-- alter table public.dividas add column if not exists grupo text not null default 'divida'
+--   check (grupo in ('casa','carro','viagens','alimentacao','saude','educacao','lazer','outros','reserva_emergencia','aposentadoria','divida'));
 
 -- ============================================================
 -- 11. HISTÓRICO DE PAGAMENTOS DE DÍVIDA
@@ -368,6 +378,18 @@ create policy "profile_update" on public.user_profiles
   for update using (auth.uid() = id) with check (auth.uid() = id);
 create policy "profile_delete" on public.user_profiles
   for delete using (auth.uid() = id);
+
+-- Admin pode ver e atualizar qualquer perfil
+create policy "admin_profile_select" on public.user_profiles
+  for select using (
+    exists (select 1 from public.user_profiles where id = auth.uid() and is_admin = true)
+  );
+create policy "admin_profile_update" on public.user_profiles
+  for update using (
+    exists (select 1 from public.user_profiles where id = auth.uid() and is_admin = true)
+  ) with check (
+    exists (select 1 from public.user_profiles where id = auth.uid() and is_admin = true)
+  );
 
 -- pessoas
 create policy "pessoas_select" on public.pessoas

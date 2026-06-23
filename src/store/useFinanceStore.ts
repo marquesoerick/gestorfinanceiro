@@ -13,7 +13,7 @@ const mesesNomes = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho
 // Persist key dinâmica por usuário — lida antes do React montar
 const getDataKey = (): string => {
   try {
-    const raw = localStorage.getItem('gestor-auth-v1')
+    const raw = localStorage.getItem('gestor-auth-v2')
     if (!raw) return 'gestor-financeiro-v2'
     const userId = (JSON.parse(raw) as { state: { currentUserId: string | null } }).state?.currentUserId
     return userId ? `gestor-data-${userId}` : 'gestor-financeiro-v2'
