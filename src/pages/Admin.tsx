@@ -206,7 +206,7 @@ function ModalNovoUsuario({ onClose }: { onClose: () => void }) {
     }
     setLoading(true)
     const emailToUse = email.trim() || `${username.trim()}@gestorfinanceiro.com`
-    const result = await addUser(emailToUse, senha, nome.trim())
+    const result = await addUser(emailToUse, senha, nome.trim(), username.trim())
     if (!result.success) {
       setError(result.error ?? 'Erro ao criar usuário')
       setLoading(false)

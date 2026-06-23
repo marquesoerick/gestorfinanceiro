@@ -32,7 +32,7 @@ interface AuthStore {
   initializeAuth: () => void
   _fetchProfile: (userId: string) => Promise<void>
   fetchUsers: () => Promise<void>
-  addUser: (email: string, password: string, nome: string) => Promise<{ success: boolean; error?: string; userId?: string }>
+  addUser: (email: string, password: string, nome: string, username?: string) => Promise<{ success: boolean; error?: string; userId?: string }>
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<void>
   updateUser: (userId: string, updates: Partial<Pick<AuthUser, 'nome' | 'email' | 'assinatura'>>) => Promise<void>
@@ -122,9 +122,11 @@ export const useAuthStore = create<AuthStore>()(
         }
       },
 
-      addUser: async (email, password, nome) => {
+      addUser: async (email, password, nome, username) => {
         if (!email.trim() || !password || !nome.trim())
           return { success: false, error: 'Preencha todos os campos' }
+
+        const usernameToUse = username?.trim() || email.split('@')[0]
 
         // Salva sessão do admin para restaurar depois do signUp
         const { data: { session: adminSession } } = await supabase.auth.getSession()
@@ -133,7 +135,7 @@ export const useAuthStore = create<AuthStore>()(
           email: email.trim(),
           password,
           options: {
-            data: { nome: nome.trim(), username: email.split('@')[0] }
+            data: { nome: nome.trim(), username: usernameToUse }
           }
         })
 
@@ -153,6 +155,13 @@ export const useAuthStore = create<AuthStore>()(
           await get()._fetchProfile(adminSession.user.id)
         } else {
           set({ currentUser: null, currentUserId: null, loading: false })
+        }
+
+        // Garante username correto no perfil (trigger pode ter usado outro valor)
+        if (newUserId) {
+          await supabase.from('user_profiles')
+            .update({ username: usernameToUse, nome: nome.trim() })
+            .eq('id', newUserId)
         }
 
         await get().fetchUsers()
