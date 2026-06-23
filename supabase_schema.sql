@@ -1,7 +1,10 @@
 -- ============================================================
---  GESTOR FINANCEIRO — Schema Supabase (v2 — revisado)
+--  GESTOR FINANCEIRO — Schema Supabase (v3 — idempotente)
 --  Execute no SQL Editor do projeto:
 --  https://supabase.com/dashboard/project/iehuwakiloottbyrnsqd/sql
+--
+--  BANCO JÁ EXISTENTE? Use supabase_migration_v2.sql em vez deste.
+--  Este arquivo é para instalações NOVAS (banco limpo).
 --
 --  ORDEM OBRIGATÓRIA:
 --  extensões → tabelas → RLS → triggers → indexes → funções
@@ -15,7 +18,7 @@ create extension if not exists "uuid-ossp";
 --    Estende auth.users com nome, username e dados de assinatura.
 --    Criado automaticamente pelo trigger on_auth_user_created.
 -- ============================================================
-create table public.user_profiles (
+create table if not exists public.user_profiles (
   id                     uuid primary key references auth.users(id) on delete cascade,
   nome                   text not null,
   username               text unique not null,
@@ -34,7 +37,7 @@ create table public.user_profiles (
 -- ============================================================
 -- 2. PESSOAS
 -- ============================================================
-create table public.pessoas (
+create table if not exists public.pessoas (
   id          uuid primary key default uuid_generate_v4(),
   user_id     uuid not null references auth.users(id) on delete cascade,
   nome        text not null,
@@ -54,7 +57,7 @@ create table public.pessoas (
 -- ============================================================
 -- 3. FONTES DE RENDA — CATEGORIAS
 -- ============================================================
-create table public.fonte_renda_categorias (
+create table if not exists public.fonte_renda_categorias (
   id          uuid primary key default uuid_generate_v4(),
   user_id     uuid not null references auth.users(id) on delete cascade,
   nome        text not null,
@@ -67,7 +70,7 @@ create table public.fonte_renda_categorias (
 -- ============================================================
 -- 4. PRODUTOS
 -- ============================================================
-create table public.produtos (
+create table if not exists public.produtos (
   id             uuid primary key default uuid_generate_v4(),
   user_id        uuid not null references auth.users(id) on delete cascade,
   nome           text not null,
@@ -81,7 +84,7 @@ create table public.produtos (
 -- ============================================================
 -- 5. CONTAS BANCÁRIAS
 -- ============================================================
-create table public.contas_bancarias (
+create table if not exists public.contas_bancarias (
   id         uuid primary key default uuid_generate_v4(),
   user_id    uuid not null references auth.users(id) on delete cascade,
   nome       text not null,
@@ -99,7 +102,7 @@ create table public.contas_bancarias (
 -- ============================================================
 -- 6. CONTAS A PAGAR
 -- ============================================================
-create table public.contas_pagar (
+create table if not exists public.contas_pagar (
   id             uuid primary key default uuid_generate_v4(),
   user_id        uuid not null references auth.users(id) on delete cascade,
   descricao      text not null,
@@ -137,7 +140,7 @@ create table public.contas_pagar (
 -- ============================================================
 -- 7. CONTAS A RECEBER
 -- ============================================================
-create table public.contas_receber (
+create table if not exists public.contas_receber (
   id                         uuid primary key default uuid_generate_v4(),
   user_id                    uuid not null references auth.users(id) on delete cascade,
   descricao                  text not null,
@@ -168,7 +171,7 @@ create table public.contas_receber (
 -- ============================================================
 -- 8. PAGAMENTOS RECEBIDOS (sub-tabela de contas_receber)
 -- ============================================================
-create table public.pagamentos_recebidos (
+create table if not exists public.pagamentos_recebidos (
   id                uuid primary key default uuid_generate_v4(),
   user_id           uuid not null references auth.users(id) on delete cascade,
   conta_receber_id  uuid not null references public.contas_receber(id) on delete cascade,
@@ -182,7 +185,7 @@ create table public.pagamentos_recebidos (
 -- ============================================================
 -- 9. TRANSAÇÕES BANCÁRIAS
 -- ============================================================
-create table public.transacoes_bancarias (
+create table if not exists public.transacoes_bancarias (
   id                 uuid primary key default uuid_generate_v4(),
   user_id            uuid not null references auth.users(id) on delete cascade,
   data               date not null,
@@ -201,7 +204,7 @@ create table public.transacoes_bancarias (
 -- ============================================================
 -- 10. DÍVIDAS
 -- ============================================================
-create table public.dividas (
+create table if not exists public.dividas (
   id              uuid primary key default uuid_generate_v4(),
   user_id         uuid not null references auth.users(id) on delete cascade,
   descricao       text not null,
@@ -236,7 +239,7 @@ create table public.dividas (
 -- ============================================================
 -- 11. HISTÓRICO DE PAGAMENTOS DE DÍVIDA
 -- ============================================================
-create table public.pagamentos_divida (
+create table if not exists public.pagamentos_divida (
   id          uuid primary key default uuid_generate_v4(),
   user_id     uuid not null references auth.users(id) on delete cascade,
   divida_id   uuid not null references public.dividas(id) on delete cascade,
@@ -249,7 +252,7 @@ create table public.pagamentos_divida (
 -- ============================================================
 -- 12. PLANEJAMENTOS
 -- ============================================================
-create table public.planejamentos (
+create table if not exists public.planejamentos (
   id            uuid primary key default uuid_generate_v4(),
   user_id       uuid not null references auth.users(id) on delete cascade,
   nome          text not null,
@@ -272,7 +275,7 @@ create table public.planejamentos (
 -- ============================================================
 -- 13. HISTÓRICO DE APORTES DO PLANEJAMENTO
 -- ============================================================
-create table public.aportes_planejamento (
+create table if not exists public.aportes_planejamento (
   id              uuid primary key default uuid_generate_v4(),
   user_id         uuid not null references auth.users(id) on delete cascade,
   planejamento_id uuid not null references public.planejamentos(id) on delete cascade,
@@ -285,7 +288,7 @@ create table public.aportes_planejamento (
 -- ============================================================
 -- 14. FONTES DE RENDA (registros individuais)
 -- ============================================================
-create table public.fontes_renda (
+create table if not exists public.fontes_renda (
   id            uuid primary key default uuid_generate_v4(),
   user_id       uuid not null references auth.users(id) on delete cascade,
   nome          text not null,
@@ -304,7 +307,7 @@ create table public.fontes_renda (
 -- ============================================================
 -- 15. PROVISIONAMENTOS
 -- ============================================================
-create table public.provisionamentos (
+create table if not exists public.provisionamentos (
   id          uuid primary key default uuid_generate_v4(),
   user_id     uuid not null references auth.users(id) on delete cascade,
   descricao   text not null,
@@ -322,7 +325,7 @@ create table public.provisionamentos (
 -- ============================================================
 -- 16. MESES FECHADOS
 -- ============================================================
-create table public.meses_fechados (
+create table if not exists public.meses_fechados (
   id               uuid primary key default uuid_generate_v4(),
   user_id          uuid not null references auth.users(id) on delete cascade,
   mes              int not null check (mes between 1 and 12),
