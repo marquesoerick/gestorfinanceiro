@@ -99,26 +99,28 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       fetchUsers: async () => {
-        try {
-          const { data, error } = await supabase.rpc('admin_list_users')
-          if (!error && data) {
-            const mappedUsers: AuthUser[] = data.map((u: any) => ({
-              id: u.id,
-              nome: u.nome || 'Sem Nome',
-              username: u.username || u.email?.split('@')[0] || 'usuario',
-              email: u.email,
-              assinatura: {
-                status: u.assinatura_status || 'teste',
-                plano: u.assinatura_plano || 'basico',
-                expiraEm: u.assinatura_expira_em,
-                observacoes: u.assinatura_observacoes,
-                criadaEm: u.created_at
-              }
-            }))
-            set({ users: mappedUsers })
-          }
-        } catch {
-          // Falha silenciosa — sem sessão admin ou sem conexão
+        const { data, error } = await supabase.rpc('admin_list_users')
+        if (error) {
+          console.error('fetchUsers error:', error.message)
+          return
+        }
+        if (data) {
+          const mappedUsers: AuthUser[] = (data as any[]).map(u => ({
+            id: u.id,
+            nome: u.nome || u.email?.split('@')[0] || 'Sem Nome',
+            username: u.username || u.email?.split('@')[0] || 'usuario',
+            email: u.email,
+            is_admin: u.is_admin,
+            createdAt: u.created_at,
+            assinatura: {
+              status: (u.assinatura_status as StatusAssinatura) || 'teste',
+              plano: (u.assinatura_plano as PlanoAssinatura) || 'basico',
+              expiraEm: u.assinatura_expira_em,
+              observacoes: u.assinatura_observacoes,
+              criadaEm: u.created_at
+            }
+          }))
+          set({ users: mappedUsers })
         }
       },
 
