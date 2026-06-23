@@ -48,6 +48,10 @@ const friendlyError = (msg: string): string => {
   return msg
 }
 
+// Flag de módulo — suprime onAuthStateChange durante criação de usuário pelo admin
+// para evitar flash de "Acesso Negado" e logout/login acidental
+let suppressAuthChange = false
+
 export const useAuthStore = create<AuthStore>()(
   persist(
     (set, get) => ({
@@ -66,6 +70,7 @@ export const useAuthStore = create<AuthStore>()(
         })
 
         supabase.auth.onAuthStateChange(async (_event, session) => {
+          if (suppressAuthChange) return
           if (session?.user) {
             await get()._fetchProfile(session.user.id)
           } else {
@@ -128,44 +133,52 @@ export const useAuthStore = create<AuthStore>()(
 
         const usernameToUse = username?.trim() || email.split('@')[0]
 
-        // Salva sessão do admin para restaurar depois do signUp
         const { data: { session: adminSession } } = await supabase.auth.getSession()
 
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email: email.trim(),
-          password,
-          options: {
-            data: { nome: nome.trim(), username: usernameToUse }
-          }
-        })
-
-        if (signUpError) return { success: false, error: friendlyError(signUpError.message) }
-
-        const newUserId = signUpData.user?.id
-
-        // Faz logout do novo usuário (signUp auto-loga como ele)
-        await supabase.auth.signOut()
-
-        // Restaura sessão do admin
-        if (adminSession?.access_token && adminSession?.refresh_token) {
-          await supabase.auth.setSession({
-            access_token: adminSession.access_token,
-            refresh_token: adminSession.refresh_token
+        // Suprime listener durante todo o fluxo para evitar flash de tela
+        suppressAuthChange = true
+        try {
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email: email.trim(),
+            password,
+            options: { data: { nome: nome.trim(), username: usernameToUse } }
           })
-          await get()._fetchProfile(adminSession.user.id)
-        } else {
-          set({ currentUser: null, currentUserId: null, loading: false })
-        }
 
-        // Garante username correto no perfil (trigger pode ter usado outro valor)
-        if (newUserId) {
-          await supabase.from('user_profiles')
-            .update({ username: usernameToUse, nome: nome.trim() })
-            .eq('id', newUserId)
-        }
+          if (signUpError) {
+            suppressAuthChange = false
+            return { success: false, error: friendlyError(signUpError.message) }
+          }
 
-        await get().fetchUsers()
-        return { success: true, userId: newUserId }
+          const newUserId = signUpData.user?.id ?? null
+
+          await supabase.auth.signOut()
+
+          if (adminSession?.access_token && adminSession?.refresh_token) {
+            await supabase.auth.setSession({
+              access_token: adminSession.access_token,
+              refresh_token: adminSession.refresh_token
+            })
+          }
+
+          // Garante username e nome corretos no novo perfil (dentro do bloco, antes de liberar flag)
+          if (newUserId) {
+            await supabase.from('user_profiles')
+              .update({ username: usernameToUse, nome: nome.trim() })
+              .eq('id', newUserId)
+          }
+
+          suppressAuthChange = false
+
+          // Restaura perfil do admin no store
+          if (adminSession?.user?.id) {
+            await get()._fetchProfile(adminSession.user.id)
+          }
+
+          await get().fetchUsers()
+          return { success: true, userId: newUserId ?? undefined }
+        } finally {
+          suppressAuthChange = false
+        }
       },
 
       login: async (email, password) => {
@@ -175,7 +188,6 @@ export const useAuthStore = create<AuthStore>()(
         })
         if (signInError) return { success: false, error: friendlyError(signInError.message) }
 
-        // Busca perfil explicitamente para dar erro claro ao invés de silêncio
         const userId = authData.user?.id
         if (!userId) return { success: false, error: 'Sessão inválida após login.' }
 
