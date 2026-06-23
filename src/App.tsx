@@ -17,66 +17,15 @@ import { ImportarExtrato } from './pages/ImportarExtrato'
 import { Pessoas } from './pages/Pessoas'
 import { Admin } from './pages/Admin'
 import { ResetSenha } from './pages/ResetSenha'
-import { migrateLocalStorageToSupabase } from './utils/migration'
-import { CloudUpload } from 'lucide-react'
 
 function App() {
   const { currentUserId, initializeAuth, loading } = useAuthStore()
-  const [migrating, React_useState] = React.useState(false)
-  const [migrationStatus, setMigrationStatus] = React.useState('')
-  const [migrationError, setMigrationError] = React.useState('')
-
-  const setMigrating = React_useState
-
   useEffect(() => {
     initializeAuth()
   }, [initializeAuth])
 
-  useEffect(() => {
-    if (currentUserId) {
-      const hasLocalData = localStorage.getItem('gestor-financeiro-v2') !== null && 
-                           localStorage.getItem('migrated-to-supabase') === null
-      
-      if (hasLocalData) {
-        setMigrating(true)
-        setMigrationStatus('Sincronizando seus dados antigos com a nuvem...')
-        
-        migrateLocalStorageToSupabase(currentUserId).then(res => {
-          if (res.success) {
-            setMigrationStatus('Tudo pronto! Entrando...')
-            setTimeout(() => {
-              setMigrating(false)
-            }, 1500)
-          } else {
-            setMigrationError('Erro ao migrar dados: ' + res.message)
-          }
-        })
-      }
-    }
-  }, [currentUserId, setMigrating])
-
   if (loading) {
     return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-emerald-500 font-bold">Carregando...</div>
-  }
-
-  if (migrating) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
-        <div className="text-center">
-          <CloudUpload size={48} className="text-emerald-500 mx-auto mb-4 animate-bounce" />
-          <h2 className="text-white text-xl font-bold mb-2">Migração em andamento</h2>
-          <p className="text-emerald-400 mb-4">{migrationStatus}</p>
-          {migrationError && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl max-w-md mx-auto text-sm">
-              {migrationError}
-              <button onClick={() => setMigrating(false)} className="block mt-4 mx-auto px-4 py-2 bg-slate-800 text-white rounded hover:bg-slate-700 transition-colors">
-                Ignorar e Continuar
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    )
   }
 
   return (
