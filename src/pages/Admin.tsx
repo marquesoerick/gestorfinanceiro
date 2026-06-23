@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   Users, Shield, Plus, Key, Trash2, Pencil, LogOut, Lock,
   Eye, EyeOff, Settings, Copy, CheckCircle, AlertTriangle, Database
@@ -160,12 +160,13 @@ function ModalNovoUsuario({ onClose }: { onClose: () => void }) {
   const [observacoes, setObservacoes] = useState('')
   const [error, setError] = useState('')
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!nome.trim() || !username.trim() || !senha) {
       setError('Nome, usuário e senha são obrigatórios')
       return
     }
-    const result = addUser(username.trim(), senha, nome.trim())
+    const emailToUse = email.trim() || `${username.trim()}@gestorfinanceiro.com`
+    const result = await addUser(emailToUse, senha, nome.trim())
     if (!result.success) { setError(result.error ?? 'Erro ao criar usuário'); return }
 
     // Find the newly created user
@@ -268,7 +269,7 @@ function ModalEditarAssinatura({ user, onClose }: { user: AuthUser; onClose: () 
   const [expiraEm, setExpiraEm] = useState(existing?.expiraEm?.split('T')[0] ?? '')
   const [observacoes, setObservacoes] = useState(existing?.observacoes ?? '')
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const assinatura: Assinatura = {
       status,
       plano,
@@ -276,7 +277,7 @@ function ModalEditarAssinatura({ user, onClose }: { user: AuthUser; onClose: () 
       observacoes: observacoes.trim() || undefined,
       criadaEm: existing?.criadaEm ?? new Date().toISOString(),
     }
-    updateUser(user.id, { assinatura })
+    await updateUser(user.id, { assinatura })
     onClose()
   }
 
@@ -597,8 +598,15 @@ function ActionBtn({ onClick, title, className, children }: { onClick: () => voi
 // ─── Main Admin Panel ─────────────────────────────────────────────────────────
 export function Admin() {
   const { isAuthenticated, logoutAdmin } = useAdminStore()
-  const { users } = useAuthStore()
+  const { users, fetchUsers } = useAuthStore()
   const [modal, setModal] = useState<ModalType>({ kind: 'none' })
+
+  // Fetch users on mount if authenticated
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      fetchUsers()
+    }
+  }, [isAuthenticated, fetchUsers])
 
   if (!isAuthenticated) return <AdminLogin />
 

@@ -31,6 +31,7 @@ interface AuthStore {
   
   initializeAuth: () => void
   _fetchProfile: (userId: string) => Promise<void>
+  fetchUsers: () => Promise<void>
   addUser: (email: string, password: string, nome: string) => Promise<{ success: boolean; error?: string }>
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<void>
@@ -91,11 +92,31 @@ export const useAuthStore = create<AuthStore>()(
         }
       },
 
+      fetchUsers: async () => {
+        const { data, error } = await supabase.rpc('admin_list_users')
+        if (!error && data) {
+          const mappedUsers: AuthUser[] = data.map((u: any) => ({
+            id: u.id,
+            nome: u.nome || 'Sem Nome',
+            username: u.username || u.email?.split('@')[0] || 'usuario',
+            email: u.email,
+            assinatura: {
+              status: u.assinatura_status || 'teste',
+              plano: u.assinatura_plano || 'basico',
+              expiraEm: u.assinatura_expira_em,
+              observacoes: u.assinatura_observacoes,
+              criadaEm: u.created_at
+            }
+          }))
+          set({ users: mappedUsers })
+        }
+      },
+
       addUser: async (email, password, nome) => {
         if (!email.trim() || !password || !nome.trim())
           return { success: false, error: 'Preencha todos os campos' }
         
-        const { error: _error } = await supabase.auth.signUp({
+        const { error: signUpError } = await supabase.auth.signUp({
           email: email.trim(),
           password,
           options: {
@@ -103,17 +124,20 @@ export const useAuthStore = create<AuthStore>()(
           }
         })
 
-        if (error) return { success: false, error: error.message }
+        if (signUpError) return { success: false, error: signUpError.message }
+        
+        // Atualiza a lista de usuários após criar
+        get().fetchUsers()
         return { success: true }
       },
 
       login: async (email, password) => {
-        const { error: _error } = await supabase.auth.signInWithPassword({
+        const { error: signInError } = await supabase.auth.signInWithPassword({
           email: email.trim(),
           password
         })
 
-        if (error) return { success: false, error: 'Credenciais inválidas' }
+        if (signInError) return { success: false, error: signInError.message }
         return { success: true }
       },
 
@@ -123,12 +147,22 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       updateUser: async (userId, updates) => {
-        const { error } = await supabase.from('user_profiles').update(updates).eq('id', userId)
-        if (!error) {
-          set(s => ({
-            currentUser: s.currentUser?.id === userId ? { ...s.currentUser, ...updates } : s.currentUser
-          }))
+        if (updates.assinatura) {
+          await supabase.rpc('admin_update_assinatura', {
+            p_user_id: userId,
+            p_status: updates.assinatura.status,
+            p_plano: updates.assinatura.plano,
+            p_expira_em: updates.assinatura.expiraEm,
+            p_observacoes: updates.assinatura.observacoes
+          })
         }
+        
+        const { error: _updateError } = await supabase.from('user_profiles').update({
+          nome: updates.nome,
+          email: updates.email
+        }).eq('id', userId)
+
+        get().fetchUsers()
       },
 
       deleteUser: (_userId) => {
