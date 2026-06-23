@@ -38,7 +38,7 @@ export function ResetSenha() {
     if (pw !== pw2) { setError('As senhas não coincidem'); return }
     const uid = consumeResetToken(token)
     if (!uid) { setInvalid(true); return }
-    changePassword(uid, pw)
+    changePassword(pw)
     setSuccess(true)
   }
 

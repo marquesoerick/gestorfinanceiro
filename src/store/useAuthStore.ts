@@ -26,6 +26,7 @@ export interface AuthUser {
 interface AuthStore {
   currentUser: AuthUser | null
   currentUserId: string | null
+  users: AuthUser[] // Dummy para não quebrar Admin e ResetSenha
   loading: boolean
   
   initializeAuth: () => void
@@ -33,7 +34,8 @@ interface AuthStore {
   addUser: (email: string, password: string, nome: string) => Promise<{ success: boolean; error?: string }>
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<void>
-  updateUser: (userId: string, updates: Partial<Pick<AuthUser, 'nome' | 'email'>>) => Promise<void>
+  updateUser: (userId: string, updates: Partial<Pick<AuthUser, 'nome' | 'email' | 'assinatura'>>) => Promise<void>
+  deleteUser: (userId: string) => void
   changePassword: (newPassword: string) => Promise<{ success: boolean; error?: string }>
 }
 
@@ -42,6 +44,7 @@ export const useAuthStore = create<AuthStore>()(
     (set, get) => ({
       currentUser: null,
       currentUserId: null,
+      users: [],
       loading: true,
 
       initializeAuth: () => {
@@ -92,7 +95,7 @@ export const useAuthStore = create<AuthStore>()(
         if (!email.trim() || !password || !nome.trim())
           return { success: false, error: 'Preencha todos os campos' }
         
-        const { data, error } = await supabase.auth.signUp({
+        const { error: _error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
           options: {
@@ -105,7 +108,7 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       login: async (email, password) => {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { error: _error } = await supabase.auth.signInWithPassword({
           email: email.trim(),
           password
         })
@@ -126,6 +129,10 @@ export const useAuthStore = create<AuthStore>()(
             currentUser: s.currentUser?.id === userId ? { ...s.currentUser, ...updates } : s.currentUser
           }))
         }
+      },
+
+      deleteUser: (_userId) => {
+        console.warn('deleteUser not fully supported in client-side Supabase Auth without Admin API')
       },
 
       changePassword: async (newPassword) => {

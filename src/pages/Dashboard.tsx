@@ -203,7 +203,7 @@ export function Dashboard() {
                 <XAxis dataKey="mes" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                 <YAxis tickFormatter={v => `${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 12 }}
-                  formatter={(v: number, name: string) => [formatCurrency(v), name === 'receita' ? 'Receita' : 'Despesa']} />
+                  formatter={(v: any, name: any) => [v ? `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'R$ 0,00', name === 'receita' ? 'Receitas' : 'Despesas']} />
                 <Area type="monotone" dataKey="receita" stroke="#10b981" fill="url(#gReceita)" strokeWidth={2} dot={false} />
                 <Area type="monotone" dataKey="despesa" stroke="#f43f5e" fill="url(#gDespesa)" strokeWidth={2} dot={false} />
               </AreaChart>
@@ -228,7 +228,7 @@ export function Dashboard() {
                   <Pie data={gastosPorGrupo} cx="50%" cy="50%" innerRadius={38} outerRadius={58} paddingAngle={3} dataKey="value">
                     {gastosPorGrupo.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                   </Pie>
-                  <Tooltip formatter={(v: number) => formatCurrency(v)} contentStyle={{ borderRadius: 8, fontSize: 11 }} />
+                  <Tooltip formatter={(v: any) => formatCurrency(v)} contentStyle={{ borderRadius: 8, fontSize: 11 }} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="space-y-1.5 mt-3">

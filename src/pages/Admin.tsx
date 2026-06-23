@@ -393,7 +393,7 @@ function ModalAlterarSenha({ user, onClose }: { user: AuthUser; onClose: () => v
   const handleSave = () => {
     if (!pw || pw.length < 4) { setError('Senha deve ter ao menos 4 caracteres'); return }
     if (pw !== pw2) { setError('As senhas não coincidem'); return }
-    changePassword(user.id, pw)
+    changePassword(pw)
     setSuccess(true)
     setTimeout(onClose, 1200)
   }

@@ -21,8 +21,7 @@ interface Props { onMenuClick: () => void }
 
 export function Header({ onMenuClick }: Props) {
   const { pathname } = useLocation()
-  const { users, currentUserId } = useAuthStore()
-  const currentUser = users.find(u => u.id === currentUserId)
+  const { currentUser } = useAuthStore()
   const title = titles[pathname] ?? 'Gestor Financeiro'
 
   return (

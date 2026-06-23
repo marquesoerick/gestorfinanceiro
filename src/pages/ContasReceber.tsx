@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Plus, Pencil, Trash2, CheckCircle, Filter, Building2, UserPlus, Package, X, ChevronDown } from 'lucide-react'
+import { Plus, Filter, Trash2, Pencil, CheckCircle, ChevronDown, UserPlus, Package, X } from 'lucide-react'
 import { PessoaCombobox } from '../components/ui/PessoaCombobox'
 import { useFinanceStore } from '../store/useFinanceStore'
 import {
@@ -575,7 +575,7 @@ export function ContasReceber() {
           <option value="pessoal">Pessoal</option>
         </select>
         <span className="ml-auto text-xs text-slate-400 flex-shrink-0 pl-2">
-          {grupos.comPessoa.length} cliente{grupos.comPessoa.length !== 1 ? 's' : ''} ? {grupos.semPessoa.length} avulso{grupos.semPessoa.length !== 1 ? 's' : ''}
+          {grupos.comPessoa.length} cliente{grupos.comPessoa.length !== 1 ? 's' : ''} / {grupos.semPessoa.length} avulso{grupos.semPessoa.length !== 1 ? 's' : ''}
         </span>
       </div>
 
@@ -585,7 +585,7 @@ export function ContasReceber() {
           <div className="text-center py-14 text-slate-400">
             <div className="text-4xl mb-2">??</div>
             <div>Nenhum recebimento em {mesesLongos[mesAtivo - 1]} {anoAtivo}</div>
-            <button onClick={openNew} className="mt-2 text-emerald-500 text-sm hover:underline">+ Registrar venda</button>
+            <button onClick={() => openNew('venda')} className="mt-2 text-emerald-500 text-sm hover:underline">+ Registrar venda</button>
           </div>
         ) : (
           <div className="divide-y divide-slate-100">
