@@ -126,14 +126,18 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       addUser: async (email, password, nome, username) => {
-        if (!email.trim() || !password || !nome.trim())
-          return { success: false, error: 'Preencha todos os campos' }
+        if (!password || !nome.trim() || !username?.trim())
+          return { success: false, error: 'Preencha todos os campos obrigatórios' }
 
-        const usernameToUse = username?.trim() || email.split('@')[0]
+        const usernameToUse = username.trim()
+        // Auth email sempre baseado no username — garante login por username funcionar
+        const authEmail = `${usernameToUse}@gestorfinanceiro.com`
+        // Email real vai apenas para o perfil como contato
+        const contactEmail = email.trim() || authEmail
 
         // Cliente auxiliar não persiste sessão — admin nunca é deslogado
         const { data: signUpData, error: signUpError } = await supabaseAux.auth.signUp({
-          email: email.trim(),
+          email: authEmail,
           password,
           options: { data: { nome: nome.trim(), username: usernameToUse } }
         })
@@ -148,7 +152,7 @@ export const useAuthStore = create<AuthStore>()(
           id: newUserId,
           nome: nome.trim(),
           username: usernameToUse,
-          email: email.trim(),
+          email: contactEmail,
         }, { onConflict: 'id' })
 
         if (upsertError) return { success: false, error: `Erro ao salvar perfil: ${upsertError.message}` }
