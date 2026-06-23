@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { supabase } from '../lib/supabase'
+import { supabase, supabaseAux } from '../lib/supabase'
 
 export type StatusAssinatura = 'ativa' | 'teste' | 'expirada' | 'cancelada'
 export type PlanoAssinatura = 'basico' | 'profissional' | 'enterprise'
@@ -48,10 +48,6 @@ const friendlyError = (msg: string): string => {
   return msg
 }
 
-// Flag de módulo — suprime onAuthStateChange durante criação de usuário pelo admin
-// para evitar flash de "Acesso Negado" e logout/login acidental
-let suppressAuthChange = false
-
 export const useAuthStore = create<AuthStore>()(
   persist(
     (set, get) => ({
@@ -70,7 +66,6 @@ export const useAuthStore = create<AuthStore>()(
         })
 
         supabase.auth.onAuthStateChange(async (_event, session) => {
-          if (suppressAuthChange) return
           if (session?.user) {
             await get()._fetchProfile(session.user.id)
           } else {
@@ -133,52 +128,26 @@ export const useAuthStore = create<AuthStore>()(
 
         const usernameToUse = username?.trim() || email.split('@')[0]
 
-        const { data: { session: adminSession } } = await supabase.auth.getSession()
+        // Usa cliente auxiliar (persistSession: false) para não afetar sessão do admin
+        const { data: signUpData, error: signUpError } = await supabaseAux.auth.signUp({
+          email: email.trim(),
+          password,
+          options: { data: { nome: nome.trim(), username: usernameToUse } }
+        })
 
-        // Suprime listener durante todo o fluxo para evitar flash de tela
-        suppressAuthChange = true
-        try {
-          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-            email: email.trim(),
-            password,
-            options: { data: { nome: nome.trim(), username: usernameToUse } }
-          })
+        if (signUpError) return { success: false, error: friendlyError(signUpError.message) }
 
-          if (signUpError) {
-            suppressAuthChange = false
-            return { success: false, error: friendlyError(signUpError.message) }
-          }
+        const newUserId = signUpData.user?.id
 
-          const newUserId = signUpData.user?.id ?? null
-
-          await supabase.auth.signOut()
-
-          if (adminSession?.access_token && adminSession?.refresh_token) {
-            await supabase.auth.setSession({
-              access_token: adminSession.access_token,
-              refresh_token: adminSession.refresh_token
-            })
-          }
-
-          // Garante username e nome corretos no novo perfil (dentro do bloco, antes de liberar flag)
-          if (newUserId) {
-            await supabase.from('user_profiles')
-              .update({ username: usernameToUse, nome: nome.trim() })
-              .eq('id', newUserId)
-          }
-
-          suppressAuthChange = false
-
-          // Restaura perfil do admin no store
-          if (adminSession?.user?.id) {
-            await get()._fetchProfile(adminSession.user.id)
-          }
-
-          await get().fetchUsers()
-          return { success: true, userId: newUserId ?? undefined }
-        } finally {
-          suppressAuthChange = false
+        // Atualiza perfil do novo usuário usando o cliente principal (sessão admin intacta)
+        if (newUserId) {
+          await supabase.from('user_profiles')
+            .update({ username: usernameToUse, nome: nome.trim() })
+            .eq('id', newUserId)
         }
+
+        await get().fetchUsers()
+        return { success: true, userId: newUserId }
       },
 
       login: async (email, password) => {
