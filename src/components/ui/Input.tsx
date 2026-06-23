@@ -40,11 +40,12 @@ Input.displayName = 'Input'
 
 interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string
+  hint?: string
   span2?: boolean
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, span2, className = '', children, ...props }, ref) => (
+  ({ label, hint, span2, className = '', children, ...props }, ref) => (
     <div className={span2 ? 'md:col-span-2' : ''}>
       {label && (
         <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
@@ -61,6 +62,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
       >
         {children}
       </select>
+      {hint && <p className="text-[11px] text-slate-400 mt-1">{hint}</p>}
     </div>
   )
 )

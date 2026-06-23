@@ -119,14 +119,23 @@ export const useFinanceStore = create<FinanceStore>()(
       setMesAtivo: (mes, ano) => set({ mesAtivo: mes, anoAtivo: ano }),
 
       fecharMes: (mes, ano) => set((s) => {
-        const contasPendentes = s.contasPagar.filter(c =>
+        const contasDoMes = s.contasPagar.filter(c =>
           getMesRef(c.vencimento, c.mesReferencia) === mes &&
-          getAnoRef(c.vencimento, c.anoReferencia) === ano &&
-          (c.status === 'pendente' || c.status === 'vencido')
+          getAnoRef(c.vencimento, c.anoReferencia) === ano
         )
+        const contasPendentes = contasDoMes.filter(c => c.status === 'pendente' || c.status === 'vencido')
+        const contasRecorrentesQuitadas = contasDoMes.filter(c => c.recorrente && c.status === 'pago')
 
         const nextMes = mes === 12 ? 1 : mes + 1
         const nextAno = mes === 12 ? ano + 1 : ano
+
+        // Ids já existentes no próximo mês para evitar duplicatas de recorrentes
+        const existentesNextMes = new Set(
+          s.contasPagar
+            .filter(c => getMesRef(c.vencimento, c.mesReferencia) === nextMes && getAnoRef(c.vencimento, c.anoReferencia) === nextAno)
+            .map(c => c.origemId)
+            .filter(Boolean)
+        )
 
         const carryoverEntries: ContaPagar[] = contasPendentes.map(c => {
           const oldDate = new Date(c.vencimento + 'T00:00:00')
@@ -146,16 +155,35 @@ export const useFinanceStore = create<FinanceStore>()(
           }
         })
 
+        const recorrenteEntries: ContaPagar[] = contasRecorrentesQuitadas
+          .filter(c => !existentesNextMes.has(c.id))
+          .map(c => {
+            const oldDate = new Date(c.vencimento + 'T00:00:00')
+            const newDate = new Date(nextAno, nextMes - 1, Math.min(oldDate.getDate(), 28))
+            return {
+              ...c,
+              id: uid(),
+              mesReferencia: nextMes,
+              anoReferencia: nextAno,
+              vencimento: newDate.toISOString().split('T')[0],
+              status: 'pendente' as StatusConta,
+              origem: 'recorrente' as OrigemConta,
+              origemId: c.id,
+              dataPagamento: undefined,
+              valorPago: undefined,
+            }
+          })
+
         const mesFechado: MesFechado = {
           id: uid(),
           mes, ano,
           fechadoEm: new Date().toISOString(),
           totalPendente: contasPendentes.reduce((sum, c) => sum + c.valor, 0),
-          contasCarryover: contasPendentes.length
+          contasCarryover: contasPendentes.length + recorrenteEntries.length
         }
 
         return {
-          contasPagar: [...s.contasPagar, ...carryoverEntries],
+          contasPagar: [...s.contasPagar, ...carryoverEntries, ...recorrenteEntries],
           mesesFechados: [...s.mesesFechados.filter(m => !(m.mes === mes && m.ano === ano)), mesFechado],
           mesAtivo: nextMes,
           anoAtivo: nextAno

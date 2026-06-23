@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { Plus, Pencil, Trash2, TrendingDown, DollarSign, Calendar, Percent, CheckCircle } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useFinanceStore } from '../store/useFinanceStore'
@@ -252,7 +252,7 @@ export function Dividas() {
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
               Valor da Parcela
               {parcelasPreview.length > 0 && (
-                <span className="ml-2 text-emerald-600 font-normal">→ {parcelasPreview.length} parcelas</span>
+                <span className="ml-2 text-emerald-600 font-normal">? {parcelasPreview.length} parcelas</span>
               )}
             </label>
             <input type="number" value={form.valorParcela || ''} onChange={e => f('valorParcela', parseFloat(e.target.value))} className="fi" />
@@ -266,7 +266,7 @@ export function Dividas() {
             <input type="number" value={form.parcelaAtual || ''} onChange={e => f('parcelaAtual', parseInt(e.target.value))} className="fi" />
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Data Início (1Âª parcela)</label>
+            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Data Início (1ª parcela)</label>
             <input type="date" value={form.dataInicio} onChange={e => f('dataInicio', e.target.value)} className="fi" />
           </div>
           <div>

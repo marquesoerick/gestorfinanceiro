@@ -12,7 +12,7 @@ import { Badge } from '../components/ui/Badge'
 import { MesNavigator } from '../components/ui/MesNavigator'
 import type { ContaReceber, FonteRenda, StatusConta, Prioridade, TipoPessoa, Pessoa } from '../types'
 
-// ─── Item individual de uma venda ───────────────────────────────────
+// --- Item individual de uma venda -----------------------------------
 type ItemVenda = {
   _id: string
   produtoId: string
@@ -26,7 +26,7 @@ const newItem = (): ItemVenda => ({
   produtoId: '', fonteRendaId: '', descricao: '', valor: 0,
 })
 
-// ─── Grupo de entradas por pessoa ────────────────────────────────────
+// --- Grupo de entradas por pessoa ------------------------------------
 type GrupoPessoa = {
   pessoaId: string
   pessoa: Pessoa | null
@@ -36,7 +36,7 @@ type GrupoPessoa = {
   status: 'pago' | 'parcial' | 'pendente' | 'atrasado'
 }
 
-// ─── Form state ──────────────────────────────────────────────────────
+// --- Form state ------------------------------------------------------
 const emptyForm = () => ({
   pessoaId: '',
   status: 'pendente' as StatusConta,
@@ -78,7 +78,7 @@ export function ContasReceber() {
   const [filtroStatus, setFiltroStatus] = useState<string>('todos')
   const [filtroFonte, setFiltroFonte] = useState<string>('todos')
 
-  // ─── Expandir/colapsar pessoas ────────────────────────────────────
+  // --- Expandir/colapsar pessoas ------------------------------------
   const [expandedPessoas, setExpandedPessoas] = useState<Set<string>>(new Set())
   const togglePessoa = (id: string) => setExpandedPessoas(prev => {
     const next = new Set(prev)
@@ -87,12 +87,12 @@ export function ContasReceber() {
     return next
   })
 
-  // ─── Modal de pagamento ───────────────────────────────────────────
+  // --- Modal de pagamento -------------------------------------------
   const [pagarModal, setPagarModal] = useState<ContaReceber | null>(null)
   const [pagarValor, setPagarValor] = useState(0)
   const [pagarContaId, setPagarContaId] = useState('')
 
-  // ─── Tabela e filtros ─────────────────────────────────────────────
+  // --- Tabela e filtros ---------------------------------------------
   const filtered = useMemo(() =>
     contasReceber
       .filter(c =>
@@ -104,7 +104,7 @@ export function ContasReceber() {
       .sort((a, b) => a.vencimento.localeCompare(b.vencimento))
   , [contasReceber, mesAtivo, anoAtivo, filtroStatus, filtroFonte])
 
-  // ─── Agrupar por pessoa ───────────────────────────────────────────
+  // --- Agrupar por pessoa -------------------------------------------
   const grupos = useMemo(() => {
     const map = new Map<string, GrupoPessoa>()
     const semPessoa: ContaReceber[] = []
@@ -138,7 +138,7 @@ export function ContasReceber() {
     }
   }, [filtered, pessoas])
 
-  // ─── Débitos do modal: entradas do mês filtrado para a pessoa ────
+  // --- Débitos do modal: entradas do mês filtrado para a pessoa ----
   const todosDebitos = useMemo(() => {
     if (!pagarModal) return []
     if (pagarModal.pessoaId) {
@@ -153,7 +153,7 @@ export function ContasReceber() {
     todosDebitos.reduce((s, c) => s + (c.valor - (c.valorRecebido ?? 0)), 0)
   , [todosDebitos])
 
-  // ─── Distribuição PROPORCIONAL (por saldo de cada produto) ────────
+  // --- Distribuição PROPORCIONAL (por saldo de cada produto) --------
   const distribuicao = useMemo(() => {
     const totalSaldo = todosDebitos.reduce((s, d) => s + (d.valor - (d.valorRecebido ?? 0)), 0)
     return todosDebitos.map(d => {
@@ -165,7 +165,7 @@ export function ContasReceber() {
     })
   }, [todosDebitos, pagarValor])
 
-  // ─── Informação de restante/excedente para próximo mês ──────────
+  // --- Informação de restante/excedente para próximo mês ----------
   const pagamentoInfo = useMemo(() => {
     if (!pagarModal || pagarValor <= 0 || totalEmAberto <= 0) return null
     const nextMes = mesAtivo === 12 ? 1 : mesAtivo + 1
@@ -279,7 +279,7 @@ export function ContasReceber() {
     setPagarModal(null)
   }
 
-  // ─── Quick-add inline: Pessoa ─────────────────────────────────────
+  // --- Quick-add inline: Pessoa -------------------------------------
   const [quickPessoa, setQuickPessoa] = useState(false)
   const [qpNome, setQpNome] = useState('')
   const [qpTipo, setQpTipo] = useState<TipoPessoa>('cliente')
@@ -295,7 +295,7 @@ export function ContasReceber() {
     setQpNome(''); setQpTelefone(''); setQuickPessoa(false)
   }
 
-  // ─── Quick-add inline: Produto ────────────────────────────────────
+  // --- Quick-add inline: Produto ------------------------------------
   const [quickProduto, setQuickProduto] = useState(false)
   const [qprNome, setQprNome] = useState('')
   const [qprFonteId, setQprFonteId] = useState('')
@@ -326,7 +326,7 @@ export function ContasReceber() {
     setQprNome(''); setQprFonteId(''); setQprPreco(''); setQuickProduto(false)
   }
 
-  // ─── Item helpers ─────────────────────────────────────────────────
+  // --- Item helpers -------------------------------------------------
   const addItemVenda = () => setForm(prev => ({ ...prev, itens: [...prev.itens, newItem()] }))
   const removeItemVenda = (idx: number) =>
     setForm(prev => ({ ...prev, itens: prev.itens.filter((_, i) => i !== idx) }))
@@ -349,7 +349,7 @@ export function ContasReceber() {
     })
   }
 
-  // ─── KPIs ─────────────────────────────────────────────────────────
+  // --- KPIs ---------------------------------------------------------
   const totais = useMemo(() => ({
     total: filtered.reduce((s, c) => s + c.valor, 0),
     pendente: filtered.filter(c => c.status === 'pendente').reduce((s, c) => s + c.valor, 0),
@@ -357,7 +357,7 @@ export function ContasReceber() {
     recebido: filtered.filter(c => c.status === 'pago').reduce((s, c) => s + (c.valorRecebido ?? c.valor), 0),
   }), [filtered])
 
-  // ─── Preview de todos os lançamentos ─────────────────────────────
+  // --- Preview de todos os lançamentos -----------------------------
   const allEntries = useMemo(() => {
     const itensValidos = form.itens.filter(it => it.valor > 0)
     if (!itensValidos.length) return []
@@ -400,7 +400,7 @@ export function ContasReceber() {
   const showPreview = !editId && allEntries.length > 0 &&
     (form.itens.filter(it => it.valor > 0).length > 1 || form.parcelas > 1)
 
-  // ─── Abrir modais ─────────────────────────────────────────────────
+  // --- Abrir modais -------------------------------------------------
   const openNew = () => {
     const d = new Date()
     setForm({
@@ -427,7 +427,7 @@ export function ContasReceber() {
     setEditId(c.id); setQuickPessoa(false); setQuickProduto(false); setModalOpen(true)
   }
 
-  // ─── Salvar ───────────────────────────────────────────────────────
+  // --- Salvar -------------------------------------------------------
   const save = () => {
     const itensValidos = form.itens.filter(it => it.valor > 0)
     if (!itensValidos.length) return
@@ -513,22 +513,22 @@ export function ContasReceber() {
           <option value="pessoal">Pessoal</option>
         </select>
         <span className="ml-auto text-xs text-slate-400 flex-shrink-0 pl-2">
-          {grupos.comPessoa.length} cliente{grupos.comPessoa.length !== 1 ? 's' : ''} · {grupos.semPessoa.length} avulso{grupos.semPessoa.length !== 1 ? 's' : ''}
+          {grupos.comPessoa.length} cliente{grupos.comPessoa.length !== 1 ? 's' : ''} ? {grupos.semPessoa.length} avulso{grupos.semPessoa.length !== 1 ? 's' : ''}
         </span>
       </div>
 
-      {/* ─── Lista agrupada por pessoa ──────────────────────────────── */}
+      {/* --- Lista agrupada por pessoa -------------------------------- */}
       <Card>
         {filtered.length === 0 ? (
           <div className="text-center py-14 text-slate-400">
-            <div className="text-4xl mb-2">💰</div>
+            <div className="text-4xl mb-2">??</div>
             <div>Nenhum recebimento em {mesesLongos[mesAtivo - 1]} {anoAtivo}</div>
             <button onClick={openNew} className="mt-2 text-emerald-500 text-sm hover:underline">+ Registrar venda</button>
           </div>
         ) : (
           <div className="divide-y divide-slate-100">
 
-            {/* ── Grupos por pessoa ───────────────────────────────── */}
+            {/* -- Grupos por pessoa --------------------------------- */}
             {grupos.comPessoa.map(grupo => {
               const isExpanded = expandedPessoas.has(grupo.pessoaId)
               const atrasado = grupo.status === 'atrasado'
@@ -551,7 +551,7 @@ export function ContasReceber() {
                       <div className="font-semibold text-slate-800 text-sm">{grupo.pessoa?.nome ?? 'Pessoa'}</div>
                       <div className="text-xs text-slate-400 mt-0.5">
                         {grupo.entradas.length} produto{grupo.entradas.length > 1 ? 's' : ''} neste mês
-                        {grupo.pessoa?.telefone && <span className="ml-2">📞 {grupo.pessoa.telefone}</span>}
+                        {grupo.pessoa?.telefone && <span className="ml-2">?? {grupo.pessoa.telefone}</span>}
                       </div>
                     </div>
 
@@ -562,7 +562,7 @@ export function ContasReceber() {
                         <div className="text-xs text-amber-600">Saldo: {formatCurrency(grupo.saldoDevedor)}</div>
                       )}
                       {grupo.saldoDevedor <= 0 && grupo.status === 'pago' && (
-                        <div className="text-xs text-emerald-600">Quitado ✓</div>
+                        <div className="text-xs text-emerald-600">Quitado ?</div>
                       )}
                     </div>
 
@@ -637,7 +637,7 @@ export function ContasReceber() {
               )
             })}
 
-            {/* ── Entradas avulsas (sem pessoa) ───────────────────── */}
+            {/* -- Entradas avulsas (sem pessoa) --------------------- */}
             {grupos.semPessoa.length > 0 && (
               <>
                 {grupos.comPessoa.length > 0 && (
@@ -688,7 +688,7 @@ export function ContasReceber() {
         )}
       </Card>
 
-      {/* ─── Modal: Nova Venda / Editar ──────────────────────────────── */}
+      {/* --- Modal: Nova Venda / Editar -------------------------------- */}
       <Modal open={modalOpen} onClose={() => setModalOpen(false)}
         title={editId ? 'Editar Conta a Receber' : 'Nova Venda'} size="lg">
         <div className="space-y-5">
@@ -706,13 +706,13 @@ export function ContasReceber() {
             </div>
             <select value={form.pessoaId} onChange={e => f('pessoaId', e.target.value)}
               className="fi">
-              <option value="">â€” Sem pessoa vinculada â€”</option>
+              <option value="">Selecione a pessoa</option>
               {pessoas.filter(p => p.ativa && (p.tipo === 'cliente' || p.tipo === 'ambos')).map(p => (
                 <option key={p.id} value={p.id}>{p.nome}</option>
               ))}
             </select>
             {pessoaSelecionada?.telefone && !quickPessoa && (
-              <div className="text-xs text-slate-400 mt-1">📞 {pessoaSelecionada.telefone}</div>
+              <div className="text-xs text-slate-400 mt-1">?? {pessoaSelecionada.telefone}</div>
             )}
             {quickPessoa && (
               <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-xl space-y-2">
@@ -746,7 +746,7 @@ export function ContasReceber() {
                 Itens da venda
                 {form.itens.length > 1 && (
                   <span className="ml-2 font-normal text-slate-400">
-                    ({form.itens.filter(it => it.valor > 0).length} produto(s) · {formatCurrency(totalItens)})
+                    ({form.itens.filter(it => it.valor > 0).length} produto(s) ? {formatCurrency(totalItens)})
                   </span>
                 )}
               </label>
@@ -778,7 +778,7 @@ export function ContasReceber() {
                 <div className="grid grid-cols-2 gap-2">
                   <select value={qprFonteId} onChange={e => setQprFonteId(e.target.value)}
                     className="border border-indigo-200 rounded-lg px-2 py-1.5 text-sm bg-white outline-none">
-                    <option value="">â€” Fonte de renda * â€”</option>
+                    <option value="">Selecione a fonte</option>
                     {fonteRendaCategorias.filter(f => f.ativa).map(f => (
                       <option key={f.id} value={f.id}>{f.nome}</option>
                     ))}
@@ -789,7 +789,7 @@ export function ContasReceber() {
                 </div>
                 <button type="button" onClick={salvarQuickProduto} disabled={!qprNome.trim() || !qprFonteId}
                   className="w-full py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-40 transition-colors">
-                  Cadastrar e adicionar à venda
+                  Cadastrar e adicionar ? venda
                 </button>
               </div>
             )}
@@ -804,10 +804,10 @@ export function ContasReceber() {
                       <div className="flex-1 space-y-2">
                         <select value={item.produtoId} onChange={e => updateItemVenda(idx, 'produtoId', e.target.value)}
                           className="w-full border border-slate-200 rounded-lg px-2.5 py-2 text-sm bg-white outline-none focus:border-emerald-400">
-                          <option value="">â€” Selecione o produto (opcional) â€”</option>
+                          <option value="">Selecione o produto</option>
                           {produtos.filter(p => p.ativo).map(p => {
                             const f = fonteRendaCategorias.find(f => f.id === p.fonteRendaId)
-                            return <option key={p.id} value={p.id}>{p.nome}{f ? ` · ${f.nome}` : ''}</option>
+                            return <option key={p.id} value={p.id}>{p.nome}{f ? ` ? ${f.nome}` : ''}</option>
                           })}
                         </select>
                         <div className="flex gap-2">
@@ -830,7 +830,7 @@ export function ContasReceber() {
                         {!item.produtoId && fonteRendaCategorias.length > 0 && (
                           <select value={item.fonteRendaId} onChange={e => updateItemVenda(idx, 'fonteRendaId', e.target.value)}
                             className="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs bg-white outline-none text-slate-500">
-                            <option value="">â€” ou selecione a fonte de renda â€”</option>
+                            <option value="">Selecione a fonte de renda</option>
                             {fonteRendaCategorias.filter(f => f.ativa).map(f => (
                               <option key={f.id} value={f.id}>{f.nome}</option>
                             ))}
@@ -918,7 +918,7 @@ export function ContasReceber() {
               <div className="text-xs font-semibold text-emerald-700 mb-2 flex items-center gap-1">
                 <CheckCircle size={12} />
                 {allEntries.length} lançamento(s) serão criados
-                {form.parcelas > 1 && <> â€” todo dia {form.diaPagamento} â€” {form.parcelas}x</>}
+                {form.parcelas > 1 && <> · todo dia {form.diaPagamento} · {form.parcelas}x</>}
               </div>
               <div className="space-y-1.5 max-h-48 overflow-y-auto">
                 {allEntries.map((e, i) => {
@@ -935,7 +935,7 @@ export function ContasReceber() {
                 })}
               </div>
               <div className="mt-2 pt-2 border-t border-emerald-100 flex justify-between text-xs font-bold text-emerald-700">
-                <span>{form.itens.filter(it => it.valor > 0).length} produto(s) × {form.parcelas}x</span>
+                <span>{form.itens.filter(it => it.valor > 0).length} produto(s) ? {form.parcelas}x</span>
                 <span>Total: {formatCurrency(allEntries.reduce((s, e) => s + e.valor, 0))}</span>
               </div>
             </div>
@@ -950,7 +950,7 @@ export function ContasReceber() {
         </div>
       </Modal>
 
-      {/* ─── Modal Registrar Pagamento (distribuição proporcional) ────── */}
+      {/* --- Modal Registrar Pagamento (distribuição proporcional) ------ */}
       <Modal open={!!pagarModal} onClose={() => setPagarModal(null)} title="Registrar Pagamento" size="md">
         {pagarModal && (() => {
           const pessoa = pagarModal.pessoaId ? pessoas.find(p => p.id === pagarModal.pessoaId) : null
@@ -964,7 +964,7 @@ export function ContasReceber() {
                   </div>
                   <div>
                     <div className="font-semibold text-slate-800">{pessoa.nome}</div>
-                    {pessoa.telefone && <div className="text-xs text-slate-400">📞 {pessoa.telefone}</div>}
+                    {pessoa.telefone && <div className="text-xs text-slate-400">?? {pessoa.telefone}</div>}
                     <div className="text-xs text-red-500 font-medium mt-0.5">
                       Total em aberto ({mesesLongos[mesAtivo - 1]}): {formatCurrency(totalEmAberto)}
                     </div>
@@ -981,7 +981,7 @@ export function ContasReceber() {
               {todosDebitos.length > 0 && (
                 <div>
                   <div className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">
-                    Produtos em aberto â€” {mesesLongos[mesAtivo - 1]}
+                    Produtos em aberto — {mesesLongos[mesAtivo - 1]}
                   </div>
                   <div className="space-y-1.5 max-h-40 overflow-y-auto">
                     {todosDebitos.map(d => {
@@ -997,13 +997,13 @@ export function ContasReceber() {
                           {fonte && <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: fonte.cor }} />}
                           <div className="flex-1 min-w-0">
                             <div className="font-medium text-slate-700 truncate">{d.descricao}</div>
-                            {fonte && <div className="text-slate-400">{fonte.nome} · {pct}% do total</div>}
+                            {fonte && <div className="text-slate-400">{fonte.nome} ? {pct}% do total</div>}
                           </div>
                           <div className="text-right flex-shrink-0">
                             <div className="font-semibold text-slate-700">{formatCurrency(saldo)}</div>
                             {item && item.aplicar > 0 && (
                               <div className={`font-bold ${item.novoStatus === 'pago' ? 'text-emerald-600' : 'text-amber-600'}`}>
-                                â†³ {formatCurrency(item.aplicar)}
+                                ? {formatCurrency(item.aplicar)}
                               </div>
                             )}
                           </div>
@@ -1046,12 +1046,12 @@ export function ContasReceber() {
                           {fonte && <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: fonte.cor }} />}
                           <span className="flex-1 text-slate-600 truncate">{item.d.descricao}</span>
                           <span className="text-slate-400">{formatCurrency(item.saldo)}</span>
-                          <span className="text-slate-300">→</span>
+                          <span className="text-slate-300">?</span>
                           <span className={`font-semibold ${item.novoStatus === 'pago' ? 'text-emerald-600' : 'text-amber-600'}`}>
                             {formatCurrency(item.aplicar)}
                           </span>
                           <span className={`px-1.5 py-0.5 rounded font-medium ${item.novoStatus === 'pago' ? 'bg-emerald-100 text-emerald-700' : item.novoStatus === 'parcial' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'}`}>
-                            {item.novoStatus === 'pago' ? '✓' : item.novoStatus === 'parcial' ? '~' : '-'}
+                            {item.novoStatus === 'pago' ? '?' : item.novoStatus === 'parcial' ? '~' : '-'}
                           </span>
                         </div>
                       )
@@ -1068,7 +1068,7 @@ export function ContasReceber() {
                     : 'bg-emerald-50 border-emerald-200 text-emerald-800'
                 }`}>
                   <span className="text-base leading-none flex-shrink-0">
-                    {pagamentoInfo.type === 'restante' ? 'â­' : '💰'}
+                    {pagamentoInfo.type === 'restante' ? '⚠️' : '✅'}
                   </span>
                   <div className="space-y-0.5">
                     {pagamentoInfo.type === 'restante' ? (
@@ -1087,11 +1087,11 @@ export function ContasReceber() {
                           Excedente {formatCurrency(pagamentoInfo.valor)}
                           {pagamentoInfo.hasNext
                             ? ` abatido de ${mesesLongos[pagamentoInfo.nextMes - 1]}/${pagamentoInfo.nextAno}`
-                            : ` â€” sem parcelas em ${mesesLongos[pagamentoInfo.nextMes - 1]}/${pagamentoInfo.nextAno}`}
+                            : ` — sem parcelas em ${mesesLongos[pagamentoInfo.nextMes - 1]}/${pagamentoInfo.nextAno}`}
                         </div>
                         <div className="text-emerald-700">
                           {pagamentoInfo.hasNext
-                            ? `O excedente será aplicado proporcionalmente nas parcelas de ${mesesLongos[pagamentoInfo.nextMes - 1]}/${pagamentoInfo.nextAno}, identificado como "(saldo de ${mesesLongos[mesAtivo - 1]}/${anoAtivo})".`
+                            ? `O excedente ser? aplicado proporcionalmente nas parcelas de ${mesesLongos[pagamentoInfo.nextMes - 1]}/${pagamentoInfo.nextAno}, identificado como "(saldo de ${mesesLongos[mesAtivo - 1]}/${anoAtivo})".`
                             : 'Não há parcelas no próximo mês para abater o excedente. O valor extra ficará apenas no saldo da conta.'}
                         </div>
                       </>
@@ -1116,7 +1116,7 @@ export function ContasReceber() {
                         </div>
                         {pagarContaId === cb.id && pagarValor > 0 && (
                           <span className="text-xs text-emerald-600 font-semibold">
-                            → {formatCurrency(cb.saldo + Math.min(pagarValor, totalEmAberto))}
+                            ? {formatCurrency(cb.saldo + Math.min(pagarValor, totalEmAberto))}
                           </span>
                         )}
                       </label>

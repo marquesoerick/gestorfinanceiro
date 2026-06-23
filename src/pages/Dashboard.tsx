@@ -23,7 +23,7 @@ const GRUPO_LABEL: Record<string, string> = {
 export function Dashboard() {
   const {
     contasPagar, contasReceber, dividas, planejamentos,
-    fontesRenda, contasBancarias, pessoas,
+    fontesRenda, fonteRendaCategorias, contasBancarias, pessoas,
   } = useFinanceStore()
 
   const saldoTotal   = useMemo(() => contasBancarias.filter(c => c.ativa).reduce((s, c) => s + c.saldo, 0), [contasBancarias])
@@ -65,6 +65,20 @@ export function Dashboard() {
   , [contasPagar])
 
   const progresos = planejamentos.slice(0, 4)
+
+  const fonteRendaStats = useMemo(() => {
+    const ativas = fonteRendaCategorias.filter(fc => fc.ativa)
+    if (!ativas.length) return []
+    return ativas.map(fc => {
+      const investido = contasPagar
+        .filter(c => c.fonteRendaId === fc.id)
+        .reduce((s, c) => s + c.valor, 0)
+      const retorno = contasReceber
+        .filter(c => c.fonteRendaId === fc.id)
+        .reduce((s, c) => s + c.valor, 0)
+      return { ...fc, investido, retorno, resultado: retorno - investido }
+    }).filter(fc => fc.investido > 0 || fc.retorno > 0)
+  }, [fonteRendaCategorias, contasPagar, contasReceber])
   const metaProgress = useMemo(() => {
     if (!planejamentos.length) return 0
     const t = planejamentos.reduce((s, p) => s + p.valorMeta, 0)
@@ -316,6 +330,52 @@ export function Dashboard() {
           </div>
         </Card>
       </div>
+
+      {/* ── Fontes de Renda: Investido vs Retorno ─────────── */}
+      {fonteRendaStats.length > 0 && (
+        <Card title="Fontes de Renda — Investido vs Retorno"
+          subtitle="Comparativo entre custos alocados e receitas por fonte"
+          action={<Link to="/rendas" className="text-xs text-emerald-600 font-semibold hover:text-emerald-700 flex items-center gap-1">Ver rendas <ArrowRight size={12} /></Link>}
+        >
+          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {fonteRendaStats.map(fc => {
+              const pctRetorno = fc.investido > 0 ? Math.min(200, (fc.retorno / fc.investido) * 100) : 0
+              const roi = fc.investido > 0 ? ((fc.retorno - fc.investido) / fc.investido) * 100 : null
+              return (
+                <div key={fc.id} className="rounded-xl border p-3.5" style={{ borderColor: fc.cor + '44', background: fc.cor + '08' }}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: fc.cor }} />
+                      <span className="font-semibold text-slate-800 text-sm truncate">{fc.nome}</span>
+                    </div>
+                    {roi !== null && (
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${fc.resultado >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'}`}>
+                        ROI {roi >= 0 ? '+' : ''}{roi.toFixed(0)}%
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    <div>
+                      <div className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">Investido</div>
+                      <div className="text-sm font-bold text-slate-700">{formatCurrency(fc.investido)}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-slate-400 uppercase tracking-wide mb-0.5">Retorno</div>
+                      <div className="text-sm font-bold text-emerald-600">{formatCurrency(fc.retorno)}</div>
+                    </div>
+                  </div>
+                  <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(100, pctRetorno)}%`, background: fc.cor }} />
+                  </div>
+                  <div className={`text-xs font-medium mt-1.5 ${fc.resultado >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                    {fc.resultado >= 0 ? `+${formatCurrency(fc.resultado)} de resultado` : `${formatCurrency(fc.resultado)} de déficit`}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </Card>
+      )}
 
       {/* ── Dívidas ─────────────────────────────────────────── */}
       {dividas.filter(d => d.status === 'ativa').length > 0 && (

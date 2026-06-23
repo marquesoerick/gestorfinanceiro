@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import {
   Trash2, Download, Upload, Database, Info, CheckCircle,
   Plus, Pencil, Users, Package, TrendingUp, Building2, Settings2,
@@ -28,7 +28,7 @@ export function Configuracoes() {
   const store = useFinanceStore()
   const [aba, setAba] = useState<Aba>('pessoas')
 
-  // ──────── Pessoas ────────
+  // -------- Pessoas --------
   const [pModal, setPModal] = useState(false)
   const [pEditId, setPEditId] = useState<string | null>(null)
   const [pForm, setPForm] = useState<Omit<Pessoa, 'id'>>({ nome: '', tipo: 'cliente', ativa: true })
@@ -43,7 +43,7 @@ export function Configuracoes() {
   }
   const fp = (k: keyof typeof pForm, v: unknown) => setPForm(prev => ({ ...prev, [k]: v }))
 
-  // ──────── Produtos ────────
+  // -------- Produtos --------
   const [prModal, setPrModal] = useState(false)
   const [prEditId, setPrEditId] = useState<string | null>(null)
   const [prForm, setPrForm] = useState<Omit<Produto, 'id'>>({ nome: '', fonteRendaId: '', ativo: true })
@@ -58,7 +58,7 @@ export function Configuracoes() {
   }
   const fpr = (k: keyof typeof prForm, v: unknown) => setPrForm(prev => ({ ...prev, [k]: v }))
 
-  // ──────── Fontes de Renda ────────
+  // -------- Fontes de Renda --------
   const [fModal, setFModal] = useState(false)
   const [fEditId, setFEditId] = useState<string | null>(null)
   const [fForm, setFForm] = useState<Omit<FonteRendaCategoria, 'id'>>({ nome: '', cor: '#10b981', ativa: true })
@@ -73,7 +73,7 @@ export function Configuracoes() {
   }
   const ff = (k: keyof typeof fForm, v: unknown) => setFForm(prev => ({ ...prev, [k]: v }))
 
-  // ──────── Contas Bancárias ────────
+  // -------- Contas Bancárias --------
   const [cModal, setCModal] = useState(false)
   const [cEditId, setCEditId] = useState<string | null>(null)
   const [cForm, setCForm] = useState<Omit<ContaBancaria, 'id'>>({
@@ -91,7 +91,7 @@ export function Configuracoes() {
   }
   const fc = (k: keyof typeof cForm, v: unknown) => setCForm(prev => ({ ...prev, [k]: v }))
 
-  // ──────── Backup ────────
+  // -------- Backup --------
   const [confirmClear, setConfirmClear] = useState(false)
   const [seeded, setSeeded] = useState(false)
 
@@ -139,7 +139,7 @@ export function Configuracoes() {
 
   const carregarDemo = () => { seedDemoData(); setSeeded(true); setTimeout(() => setSeeded(false), 3000) }
 
-  // ──────── Tabs config ────────
+  // -------- Tabs config --------
   const tabs: { id: Aba; label: string; icon: React.ElementType; count?: number }[] = [
     { id: 'pessoas', label: 'Pessoas', icon: Users, count: store.pessoas.length },
     { id: 'produtos', label: 'Produtos', icon: Package, count: store.produtos.length },
@@ -158,7 +158,7 @@ export function Configuracoes() {
 
   return (
     <div className="space-y-5">
-      {/* Tabs â€” scroll horizontal no mobile */}
+      {/* Tabs — scroll horizontal no mobile */}
       <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
         <div className="flex gap-0.5 border-b border-slate-200 min-w-max sm:min-w-0">
           {tabs.map(t => (
@@ -178,7 +178,7 @@ export function Configuracoes() {
         </div>
       </div>
 
-      {/* ─── Aba: PESSOAS ─── */}
+      {/* --- Aba: PESSOAS --- */}
       {aba === 'pessoas' && (
         <Card title="Pessoas cadastradas" action={<Button size="sm" onClick={openPNew}><Plus size={14} /> Nova Pessoa</Button>}>
           {store.pessoas.length === 0 ? (
@@ -217,13 +217,13 @@ export function Configuracoes() {
         </Card>
       )}
 
-      {/* ─── Aba: PRODUTOS ─── */}
+      {/* --- Aba: PRODUTOS --- */}
       {aba === 'produtos' && (
         <Card title="Produtos" action={<Button size="sm" onClick={openPrNew}><Plus size={14} /> Novo Produto</Button>}>
           {store.fonteRendaCategorias.length === 0 && (
             <div className="mx-5 my-3 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-700">
-              âš  Cadastre pelo menos uma <strong>Fonte de Renda</strong> antes de adicionar produtos.
-              <button onClick={() => setAba('fontes')} className="ml-2 underline font-medium">Ir para Fontes →</button>
+              ⚠ Cadastre pelo menos uma <strong>Fonte de Renda</strong> antes de adicionar produtos.
+              <button onClick={() => setAba('fontes')} className="ml-2 underline font-medium">Ir para Fontes ?</button>
             </div>
           )}
           {store.produtos.length === 0 ? (
@@ -272,7 +272,7 @@ export function Configuracoes() {
         </Card>
       )}
 
-      {/* ─── Aba: FONTES DE RENDA ─── */}
+      {/* --- Aba: FONTES DE RENDA --- */}
       {aba === 'fontes' && (
         <Card title="Fontes de Renda" action={<Button size="sm" onClick={openFNew}><Plus size={14} /> Nova Fonte</Button>}>
           {store.fonteRendaCategorias.length === 0 ? (
@@ -306,7 +306,7 @@ export function Configuracoes() {
         </Card>
       )}
 
-      {/* ─── Aba: CONTAS BANCÃRIAS ─── */}
+      {/* --- Aba: CONTAS BANCÁRIAS --- */}
       {aba === 'contas' && (
         <Card title="Contas Bancárias" action={<Button size="sm" onClick={openCNew}><Plus size={14} /> Nova Conta</Button>}>
           {store.contasBancarias.length === 0 ? (
@@ -346,7 +346,7 @@ export function Configuracoes() {
         </Card>
       )}
 
-      {/* ─── Aba: BACKUP ─── */}
+      {/* --- Aba: BACKUP --- */}
       {aba === 'dados' && (
         <div className="space-y-4 max-w-2xl mx-auto">
           <Card title="Resumo dos Dados">
@@ -390,12 +390,12 @@ export function Configuracoes() {
         </div>
       )}
 
-      {/* ─── Aba: SISTEMA ─── */}
+      {/* --- Aba: SISTEMA --- */}
       {aba === 'sistema' && (
         <div className="max-w-2xl mx-auto space-y-4">
           <Card title="Sobre o Gestor Financeiro">
             <div className="p-5 flex items-start gap-4">
-              <div className="w-14 h-14 bg-emerald-500 rounded-2xl flex items-center justify-center flex-shrink-0 text-2xl">💰</div>
+              <div className="w-14 h-14 bg-emerald-500 rounded-2xl flex items-center justify-center flex-shrink-0 text-2xl">??</div>
               <div>
                 <h3 className="font-bold text-slate-800 text-lg">Gestor Financeiro</h3>
                 <p className="text-sm text-slate-500 mt-1">Dados armazenados localmente. 100% privado.</p>
@@ -434,7 +434,7 @@ export function Configuracoes() {
         </div>
       )}
 
-      {/* ─── Modal Pessoa ─── */}
+      {/* --- Modal Pessoa --- */}
       <Modal open={pModal} onClose={() => setPModal(false)} title={pEditId ? 'Editar Pessoa' : 'Nova Pessoa'} size="lg">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
@@ -505,7 +505,7 @@ export function Configuracoes() {
         </div>
       </Modal>
 
-      {/* ─── Modal Produto ─── */}
+      {/* --- Modal Produto --- */}
       <Modal open={prModal} onClose={() => setPrModal(false)} title={prEditId ? 'Editar Produto' : 'Novo Produto'} size="sm">
         <div className="space-y-4">
           <div>
@@ -519,12 +519,12 @@ export function Configuracoes() {
             {store.fonteRendaCategorias.length === 0 ? (
               <div className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-3">
                 Cadastre uma Fonte de Renda primeiro.
-                <button onClick={() => { setPrModal(false); setAba('fontes'); openFNew() }} className="ml-1 underline font-medium">Cadastrar agora →</button>
+                <button onClick={() => { setPrModal(false); setAba('fontes'); openFNew() }} className="ml-1 underline font-medium">Cadastrar agora ?</button>
               </div>
             ) : (
               <select value={prForm.fonteRendaId} onChange={e => fpr('fonteRendaId', e.target.value)}
                 className="fi">
-                <option value="">â€” Selecione a fonte â€”</option>
+                <option value="">Selecione a fonte</option>
                 {store.fonteRendaCategorias.filter(f => f.ativa).map(f => (
                   <option key={f.id} value={f.id}>{f.nome}</option>
                 ))}
@@ -563,7 +563,7 @@ export function Configuracoes() {
         </div>
       </Modal>
 
-      {/* ─── Modal Fonte de Renda ─── */}
+      {/* --- Modal Fonte de Renda --- */}
       <Modal open={fModal} onClose={() => setFModal(false)} title={fEditId ? 'Editar Fonte' : 'Nova Fonte de Renda'} size="sm">
         <div className="space-y-4">
           <div>
@@ -598,7 +598,7 @@ export function Configuracoes() {
         </div>
       </Modal>
 
-      {/* ─── Modal Conta Bancária ─── */}
+      {/* --- Modal Conta Bancária --- */}
       <Modal open={cModal} onClose={() => setCModal(false)} title={cEditId ? 'Editar Conta' : 'Nova Conta Bancária'} size="sm">
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
@@ -611,7 +611,7 @@ export function Configuracoes() {
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Banco <span className="font-normal text-slate-400">(opcional)</span></label>
             <input value={cForm.banco} onChange={e => fc('banco', e.target.value)}
               className="fi"
-              placeholder="Nubank, Itaú, Banestes…" />
+              placeholder="Nubank, Itaú, Banestes" />
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Tipo</label>

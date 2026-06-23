@@ -38,7 +38,7 @@ export type GrupoGasto = 'casa' | 'carro' | 'viagens' | 'alimentacao' | 'saude' 
 export type TipoPlano = 'reserva_emergencia' | 'compra_carro' | 'viagem' | 'aposentadoria' | 'outros'
 export type StatusConciliacao = 'conciliado' | 'pendente' | 'divergente'
 export type Prioridade = 'alta' | 'media' | 'baixa'
-export type OrigemConta = 'manual' | 'planejamento' | 'divida' | 'carryover'
+export type OrigemConta = 'manual' | 'planejamento' | 'divida' | 'carryover' | 'recorrente'
 
 export interface ContaPagar {
   id: string
@@ -60,6 +60,9 @@ export interface ContaPagar {
   anoReferencia?: number
   origem?: OrigemConta
   origemId?: string
+  fonteRendaId?: string
+  pessoaId?: string
+  recorrente?: boolean
 }
 
 export interface PagamentoRecebido {

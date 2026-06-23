@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { Plus, CheckCircle, XCircle, AlertCircle, GitMerge, Filter } from 'lucide-react'
 import { useFinanceStore } from '../store/useFinanceStore'
 import { formatCurrency, formatDate, toDateInput } from '../utils/formatters'
@@ -9,7 +9,7 @@ import { Badge } from '../components/ui/Badge'
 
 const emptyForm = () => ({
   data: toDateInput(), descricao: '', valor: 0,
-  tipo: 'debito' as 'debito' | 'credito', banco: 'Itaú',
+  tipo: 'debito' as 'debito' | 'credito', banco: 'Ita?',
   categoria: '', conciliado: false, statusConciliacao: 'pendente' as const
 })
 

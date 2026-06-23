@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { Plus, Pencil, Trash2, Building2 } from 'lucide-react'
 import { useFinanceStore } from '../store/useFinanceStore'
 import { formatCurrency } from '../utils/formatters'
