@@ -1,12 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useAuthStore } from '../store/useAuthStore'
-import { TrendingUp, User, Lock, Eye, EyeOff, UserPlus, CloudUpload } from 'lucide-react'
-import { migrateLocalStorageToSupabase } from '../utils/migration'
+import { TrendingUp, User, Lock, Eye, EyeOff, UserPlus } from 'lucide-react'
 
 type Mode = 'login' | 'register'
 
 export function Login() {
-  const { login, addUser, currentUserId } = useAuthStore()
+  const { login, addUser } = useAuthStore()
   const [mode, setMode] = useState<Mode>('login')
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
@@ -15,12 +14,6 @@ export function Login() {
   const [showPw, setShowPw] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  
-  const [migrating, setMigrating] = useState(false)
-  const [migrationStatus, setMigrationStatus] = useState('')
-
-  const hasLocalData = localStorage.getItem('gestor-financeiro-v2') !== null && 
-                       localStorage.getItem('migrated-to-supabase') === null
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -28,7 +21,7 @@ export function Login() {
     setLoading(true)
 
     // Forçamos o username a ser um email falso se o usuário não digitar @
-    const validEmail = email.includes('@') ? email : `${email.trim()}@gestorfinanceiro.app`
+    const validEmail = email.includes('@') ? email : `${email.trim()}@gestorfinanceiro.com`
 
     if (mode === 'register') {
       if (!nome.trim()) { setError('Informe seu nome'); setLoading(false); return }
@@ -55,47 +48,9 @@ export function Login() {
     }
   }
 
-  useEffect(() => {
-    if (currentUserId) {
-      if (hasLocalData) {
-        handleMigration(currentUserId)
-      } else {
-        window.location.href = '/'
-      }
-    }
-  }, [currentUserId])
-
-  const handleMigration = async (userId: string) => {
-    setMigrating(true)
-    setMigrationStatus('Sincronizando seus dados antigos com a nuvem...')
-    
-    const res = await migrateLocalStorageToSupabase(userId)
-    if (res.success) {
-      setMigrationStatus('Tudo pronto! Entrando...')
-      setTimeout(() => {
-        window.location.href = '/'
-      }, 1500)
-    } else {
-      setError('Erro ao migrar dados: ' + res.message)
-      setMigrating(false)
-    }
-  }
-
   const switchMode = (m: Mode) => {
     setMode(m); setError('')
     setNome(''); setEmail(''); setPassword(''); setConfirmPw('')
-  }
-
-  if (migrating) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <div className="text-center">
-          <CloudUpload size={48} className="text-emerald-500 mx-auto mb-4 animate-bounce" />
-          <h2 className="text-white text-xl font-bold mb-2">Migração em andamento</h2>
-          <p className="text-emerald-400">{migrationStatus}</p>
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -198,13 +153,6 @@ export function Login() {
               <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl flex items-start gap-2">
                 <span className="flex-shrink-0 mt-0.5">⚠️</span>
                 <span>{error}</span>
-              </div>
-            )}
-            
-            {hasLocalData && !migrating && (
-              <div className="bg-blue-50 border border-blue-200 text-blue-700 text-xs px-3 py-2 rounded-lg flex items-center gap-2 mt-2">
-                <CloudUpload size={14} />
-                <span>Seus dados locais serão enviados para nuvem no login.</span>
               </div>
             )}
 
