@@ -164,7 +164,7 @@ export function Dashboard() {
       </div>
 
       {/* ── KPIs ─────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard label="A Receber" value={formatCurrency(totalReceber)} icon={TrendingUp} iconColor="text-blue-600" iconBg="bg-blue-50" />
         <StatCard label="A Pagar" value={formatCurrency(totalPagar)} icon={TrendingDown} iconColor="text-rose-600" iconBg="bg-rose-50" danger={totalPagar > 0} />
         <StatCard label="Total Dívidas" value={formatCurrency(totalDividas)} icon={Wallet} iconColor="text-orange-600" iconBg="bg-orange-50" />

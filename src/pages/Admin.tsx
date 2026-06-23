@@ -724,9 +724,9 @@ export function Admin() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-9 h-9 bg-indigo-100 rounded-xl flex items-center justify-center">
@@ -734,7 +734,7 @@ export function Admin() {
               </div>
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total</span>
             </div>
-            <p className="text-3xl font-bold text-slate-800">{totalUsers}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-slate-800">{totalUsers}</p>
             <p className="text-xs text-slate-400 mt-0.5">Usuários cadastrados</p>
           </div>
 
@@ -745,7 +745,7 @@ export function Admin() {
               </div>
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Ativas</span>
             </div>
-            <p className="text-3xl font-bold text-emerald-700">{ativas}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-emerald-700">{ativas}</p>
             <p className="text-xs text-slate-400 mt-0.5">Assinaturas ativas</p>
           </div>
 
@@ -756,7 +756,7 @@ export function Admin() {
               </div>
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Teste</span>
             </div>
-            <p className="text-3xl font-bold text-blue-700">{teste}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-blue-700">{teste}</p>
             <p className="text-xs text-slate-400 mt-0.5">Em período de teste</p>
           </div>
 
@@ -767,7 +767,7 @@ export function Admin() {
               </div>
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Inativas</span>
             </div>
-            <p className="text-3xl font-bold text-red-700">{expiradas}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-red-700">{expiradas}</p>
             <p className="text-xs text-slate-400 mt-0.5">Expiradas / Canceladas</p>
           </div>
         </div>

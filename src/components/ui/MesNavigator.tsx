@@ -34,7 +34,7 @@ export function MesNavigator({ showFecharMes = false, onFecharMes }: Props) {
         >
           <ChevronLeft size={16} />
         </button>
-        <div className="px-3 sm:px-5 py-2.5 flex items-center gap-1.5 sm:gap-2 min-w-32 sm:min-w-44 justify-center">
+        <div className="px-2 sm:px-5 py-2.5 flex items-center gap-1.5 sm:gap-2 min-w-28 sm:min-w-44 justify-center">
           {fechado
             ? <Lock size={13} className="text-slate-400 flex-shrink-0" />
             : estesMes

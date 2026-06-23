@@ -60,10 +60,10 @@ export function StatCard({ label, value, icon: Icon, iconColor, iconBg, trend, t
           </span>
         )}
       </div>
-      <div className={`text-xl font-bold leading-tight tabular-nums ${danger ? 'text-red-700' : 'text-slate-800'}`}>
+      <div className={`text-base sm:text-xl font-bold leading-tight tabular-nums truncate ${danger ? 'text-red-700' : 'text-slate-800'}`}>
         {value}
       </div>
-      <div className={`text-xs mt-0.5 font-medium ${danger ? 'text-red-500' : 'text-slate-500'}`}>{label}</div>
+      <div className={`text-xs mt-0.5 font-medium truncate ${danger ? 'text-red-500' : 'text-slate-500'}`}>{label}</div>
     </div>
   )
 }

@@ -3,15 +3,22 @@
 
 * { box-sizing: border-box; }
 
+html {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: #f8fafc;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
-#root { width: 100%; min-height: 100vh; }
+#root { width: 100%; min-height: 100vh; overflow-x: hidden; }
 
 /* Scrollbar slim */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -51,7 +58,8 @@ button, a { touch-action: manipulation; -webkit-tap-highlight-color: transparent
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   padding: 10px 14px;
-  font-size: 14px;
+  /* 16px prevents iOS auto-zoom on focus */
+  font-size: 16px;
   font-family: inherit;
   background: #f8fafc;
   color: #1e293b;
@@ -59,6 +67,10 @@ button, a { touch-action: manipulation; -webkit-tap-highlight-color: transparent
   transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
   -webkit-appearance: none;
   appearance: none;
+}
+
+@media (min-width: 640px) {
+  .fi { font-size: 14px; }
 }
 .fi:focus {
   border-color: #34d399;

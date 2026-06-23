@@ -115,7 +115,7 @@ export function Sidebar({ open, onClose }: Props) {
                 </span>
               </div>
             )}
-            <button onClick={onClose} className="lg:hidden text-slate-500 hover:text-white p-1 rounded-lg transition-colors">
+            <button onClick={onClose} className="lg:hidden text-slate-500 hover:text-white p-2 rounded-lg transition-colors">
               <X size={18} />
             </button>
           </div>
