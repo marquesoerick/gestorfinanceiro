@@ -41,7 +41,7 @@ export const seedDemoData = () => {
   // Dívidas
   store.addDivida({
     descricao: 'Empréstimo Pessoal', credor: 'Banco Itaú', valorOriginal: 30000, valorAtual: 22500,
-    taxaJuros: 1.8, dataInicio: '2024-01-15', dataVencimento: '2026-01-15', status: 'ativa', fonte: 'pessoal',
+    taxaJuros: 1.8, dataInicio: '2024-01-15', dataVencimento: '2026-01-15', status: 'ativa', fonte: 'pessoal', grupo: 'divida',
     parcelas: 24, parcelaAtual: 8, valorParcela: 1450,
     historicoPagamentos: [
       { id: '1', data: '2024-02-15', valor: 1450 }, { id: '2', data: '2024-03-15', valor: 1450 },
@@ -50,13 +50,13 @@ export const seedDemoData = () => {
   })
   store.addDivida({
     descricao: 'Cartão Crédito PF', credor: 'Bradesco Visa', valorOriginal: 8000, valorAtual: 5200,
-    taxaJuros: 2.5, dataInicio: '2025-03-01', dataVencimento: '2026-09-01', status: 'ativa', fonte: 'pessoal',
+    taxaJuros: 2.5, dataInicio: '2025-03-01', dataVencimento: '2026-09-01', status: 'ativa', fonte: 'pessoal', grupo: 'divida',
     parcelas: 12, parcelaAtual: 5, valorParcela: 720,
     historicoPagamentos: []
   })
   store.addDivida({
     descricao: 'Financiamento Equipamentos', credor: 'BNDES', valorOriginal: 120000, valorAtual: 95000,
-    taxaJuros: 0.9, dataInicio: '2023-06-01', dataVencimento: '2028-06-01', status: 'ativa', fonte: 'empresa',
+    taxaJuros: 0.9, dataInicio: '2023-06-01', dataVencimento: '2028-06-01', status: 'ativa', fonte: 'empresa', grupo: 'divida',
     parcelas: 60, parcelaAtual: 24, valorParcela: 2200,
     historicoPagamentos: []
   })
