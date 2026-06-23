@@ -123,6 +123,7 @@ export interface Divida {
   dataVencimento: string
   status: StatusDivida
   fonte: FonteRenda
+  grupo: GrupoGasto
   parcelas: number
   parcelaAtual: number
   valorParcela: number
@@ -250,12 +251,12 @@ export interface FinanceStore {
   updateTransacao: (id: string, t: Partial<TransacaoBancaria>) => void
   deleteTransacao: (id: string) => void
 
-  addDivida: (d: Omit<Divida, 'id'>) => void
+  addDivida: (d: Omit<Divida, 'id'>) => string
   updateDivida: (id: string, d: Partial<Divida>) => void
   deleteDivida: (id: string) => void
   addPagamentoDivida: (dividaId: string, pagamento: Omit<PagamentoDivida, 'id'>) => void
 
-  addPlanejamento: (p: Omit<Planejamento, 'id'>) => void
+  addPlanejamento: (p: Omit<Planejamento, 'id'>) => string
   updatePlanejamento: (id: string, p: Partial<Planejamento>) => void
   deletePlanejamento: (id: string) => void
   addAportePlanejamento: (planejamentoId: string, aporte: Omit<AportePlanejamento, 'id'>) => void
@@ -267,6 +268,8 @@ export interface FinanceStore {
   addProvisionamento: (p: Omit<Provisionamento, 'id'>) => void
   updateProvisionamento: (id: string, p: Partial<Provisionamento>) => void
   deleteProvisionamento: (id: string) => void
+
+  deleteContasPagarByOrigemId: (origemId: string) => void
 
   addContaBancaria: (c: Omit<ContaBancaria, 'id'>) => void
   updateContaBancaria: (id: string, c: Partial<ContaBancaria>) => void

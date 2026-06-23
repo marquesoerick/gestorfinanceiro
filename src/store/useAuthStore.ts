@@ -69,7 +69,7 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       _fetchProfile: async (userId: string) => {
-        const { data, error } = await supabase.from('user_profiles').select('*').eq('id', userId).single()
+        const { data } = await supabase.from('user_profiles').select('*').eq('id', userId).single()
         if (data) {
           const user: AuthUser = {
             id: data.id,

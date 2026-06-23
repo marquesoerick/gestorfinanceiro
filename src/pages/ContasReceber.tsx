@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Plus, Filter, Trash2, Pencil, CheckCircle, ChevronDown, UserPlus, Package, X } from 'lucide-react'
+import { Plus, Filter, Trash2, Pencil, CheckCircle, ChevronDown, UserPlus, Package, X, Phone, TrendingUp } from 'lucide-react'
 import { PessoaCombobox } from '../components/ui/PessoaCombobox'
 import { useFinanceStore } from '../store/useFinanceStore'
 import {
@@ -583,7 +583,7 @@ export function ContasReceber() {
       <Card>
         {filtered.length === 0 ? (
           <div className="text-center py-14 text-slate-400">
-            <div className="text-4xl mb-2">??</div>
+            <TrendingUp size={40} className="mx-auto mb-2 text-slate-200" />
             <div>Nenhum recebimento em {mesesLongos[mesAtivo - 1]} {anoAtivo}</div>
             <button onClick={() => openNew('venda')} className="mt-2 text-emerald-500 text-sm hover:underline">+ Registrar venda</button>
           </div>
@@ -613,7 +613,7 @@ export function ContasReceber() {
                       <div className="font-semibold text-slate-800 text-sm">{grupo.pessoa?.nome ?? 'Pessoa'}</div>
                       <div className="text-xs text-slate-400 mt-0.5">
                         {grupo.entradas.length} produto{grupo.entradas.length > 1 ? 's' : ''} neste mês
-                        {grupo.pessoa?.telefone && <span className="ml-2">?? {grupo.pessoa.telefone}</span>}
+                        {grupo.pessoa?.telefone && <span className="ml-2 inline-flex items-center gap-1"><Phone size={10} />{grupo.pessoa.telefone}</span>}
                       </div>
                     </div>
 
@@ -1109,7 +1109,7 @@ export function ContasReceber() {
                   </div>
                   <div>
                     <div className="font-semibold text-slate-800">{pessoa.nome}</div>
-                    {pessoa.telefone && <div className="text-xs text-slate-400">?? {pessoa.telefone}</div>}
+                    {pessoa.telefone && <div className="text-xs text-slate-400 flex items-center gap-1"><Phone size={10} />{pessoa.telefone}</div>}
                     <div className="text-xs text-red-500 font-medium mt-0.5">
                       Total em aberto ({mesesLongos[mesAtivo - 1]}): {formatCurrency(totalEmAberto)}
                     </div>
@@ -1191,12 +1191,12 @@ export function ContasReceber() {
                           {fonte && <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: fonte.cor }} />}
                           <span className="flex-1 text-slate-600 truncate">{item.d.descricao}</span>
                           <span className="text-slate-400">{formatCurrency(item.saldo)}</span>
-                          <span className="text-slate-300">?</span>
+                          <span className="text-slate-300">→</span>
                           <span className={`font-semibold ${item.novoStatus === 'pago' ? 'text-emerald-600' : 'text-amber-600'}`}>
                             {formatCurrency(item.aplicar)}
                           </span>
                           <span className={`px-1.5 py-0.5 rounded font-medium ${item.novoStatus === 'pago' ? 'bg-emerald-100 text-emerald-700' : item.novoStatus === 'parcial' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'}`}>
-                            {item.novoStatus === 'pago' ? '?' : item.novoStatus === 'parcial' ? '~' : '-'}
+                            {item.novoStatus === 'pago' ? '✓' : item.novoStatus === 'parcial' ? '~' : '-'}
                           </span>
                         </div>
                       )
@@ -1236,7 +1236,7 @@ export function ContasReceber() {
                         </div>
                         <div className="text-emerald-700">
                           {pagamentoInfo.hasNext
-                            ? `O excedente ser? aplicado proporcionalmente nas parcelas de ${mesesLongos[pagamentoInfo.nextMes - 1]}/${pagamentoInfo.nextAno}, identificado como "(saldo de ${mesesLongos[mesAtivo - 1]}/${anoAtivo})".`
+                            ? `O excedente será aplicado proporcionalmente nas parcelas de ${mesesLongos[pagamentoInfo.nextMes - 1]}/${pagamentoInfo.nextAno}, identificado como "(saldo de ${mesesLongos[mesAtivo - 1]}/${anoAtivo})".`
                             : 'Não há parcelas no próximo mês para abater o excedente. O valor extra ficará apenas no saldo da conta.'}
                         </div>
                       </>

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Plus, Pencil, Trash2, Target, Calendar, TrendingUp, PiggyBank, CheckCircle } from 'lucide-react'
+import { Plus, Pencil, Trash2, Target, Calendar, TrendingUp, PiggyBank, CheckCircle, AlertTriangle } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useFinanceStore } from '../store/useFinanceStore'
 import { formatCurrency, formatDate, toDateInput, mesesLongos } from '../utils/formatters'
@@ -36,7 +36,7 @@ const emptyForm = (): Omit<Planejamento, 'id'> => ({
 export function Planejamentos() {
   const {
     planejamentos, addPlanejamento, updatePlanejamento, deletePlanejamento,
-    addAportePlanejamento, addContaPagar
+    addAportePlanejamento, addContaPagar, deleteContasPagarByOrigemId, contasPagar
   } = useFinanceStore()
 
   const [modalOpen, setModalOpen] = useState(false)
@@ -47,6 +47,7 @@ export function Planejamentos() {
   const [valorAporte, setValorAporte] = useState('')
   const [obsAporte, setObsAporte] = useState('')
   const [detalhesId, setDetalhesId] = useState<string | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<Planejamento | null>(null)
 
   const totalMeta = useMemo(() => planejamentos.reduce((s, p) => s + p.valorMeta, 0), [planejamentos])
   const totalAcumulado = useMemo(() => planejamentos.reduce((s, p) => s + p.valorAtual, 0), [planejamentos])
@@ -79,7 +80,7 @@ export function Planejamentos() {
     if (editId) {
       updatePlanejamento(editId, form)
     } else {
-      addPlanejamento(form)
+      const newId = addPlanejamento(form)
 
       if (gerarContasPagar && aportePreview.length > 0) {
         aportePreview.forEach(a => {
@@ -93,6 +94,7 @@ export function Planejamentos() {
             categoria: 'Planejamento',
             prioridade: 'media',
             origem: 'planejamento',
+            origemId: newId,
             mesReferencia: a.mes,
             anoReferencia: a.ano,
           })
@@ -180,7 +182,7 @@ export function Planejamentos() {
                         {p.nome}
                         {!p.ativo && <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">Inativo</span>}
                       </div>
-                      <div className="text-xs text-slate-400">{tipoInfo?.label} · {p.fonte}</div>
+                      <div className="text-xs text-slate-400">{tipoInfo?.label} · {p.fonte === 'empresa' ? 'Empresa' : 'Pessoal'}</div>
                     </div>
                   </div>
                   <div className="text-right">
@@ -217,7 +219,7 @@ export function Planejamentos() {
                     Histórico ({p.historico.length})
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => openEdit(p)}><Pencil size={13} /></Button>
-                  <Button size="sm" variant="ghost" onClick={() => deletePlanejamento(p.id)} className="text-red-500"><Trash2 size={13} /></Button>
+                  <Button size="sm" variant="ghost" onClick={() => setDeleteConfirm(p)} className="text-red-500"><Trash2 size={13} /></Button>
                 </div>
 
                 {detalhesId === p.id && p.historico.length > 0 && (
@@ -367,6 +369,45 @@ export function Planejamentos() {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Modal Confirmação de Exclusão */}
+      <Modal open={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Confirmar Exclusão" size="sm">
+        {deleteConfirm && (() => {
+          const vinculados = contasPagar.filter(c => c.origemId === deleteConfirm.id)
+          return (
+            <div className="space-y-4">
+              <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
+                <AlertTriangle size={20} className="text-red-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-red-700">Tem certeza que deseja excluir este planejamento?</p>
+                  <p className="text-sm text-red-600 mt-1"><strong>{deleteConfirm.icone} {deleteConfirm.nome}</strong></p>
+                </div>
+              </div>
+              {vinculados.length > 0 && (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700">
+                  <strong>{vinculados.length} aporte{vinculados.length > 1 ? 's' : ''}</strong> em Contas a Pagar também {vinculados.length > 1 ? 'serão excluídos' : 'será excluído'}.
+                  <div className="mt-1.5 text-xs space-y-0.5 max-h-24 overflow-y-auto">
+                    {vinculados.slice(0, 5).map(c => (
+                      <div key={c.id} className="text-amber-600">{c.descricao} — {formatCurrency(c.valor)}</div>
+                    ))}
+                    {vinculados.length > 5 && <div className="text-amber-500">+ {vinculados.length - 5} mais...</div>}
+                  </div>
+                </div>
+              )}
+              <div className="flex gap-3 pt-2">
+                <Button variant="secondary" onClick={() => setDeleteConfirm(null)} className="flex-1">Cancelar</Button>
+                <Button variant="danger" className="flex-1" onClick={() => {
+                  deleteContasPagarByOrigemId(deleteConfirm.id)
+                  deletePlanejamento(deleteConfirm.id)
+                  setDeleteConfirm(null)
+                }}>
+                  <Trash2 size={14} /> Excluir{vinculados.length > 0 ? ` + ${vinculados.length} aporte${vinculados.length > 1 ? 's' : ''}` : ''}
+                </Button>
+              </div>
+            </div>
+          )
+        })()}
       </Modal>
     </div>
   )

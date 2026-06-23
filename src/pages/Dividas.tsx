@@ -1,14 +1,14 @@
 import { useState, useMemo } from 'react'
-import { Plus, Pencil, Trash2, TrendingDown, DollarSign, Calendar, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react'
+import { Plus, Pencil, Trash2, TrendingDown, DollarSign, Calendar, CheckCircle, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useFinanceStore } from '../store/useFinanceStore'
-import { formatCurrency, formatDate, toDateInput, fonteColor, mesesLongos } from '../utils/formatters'
+import { formatCurrency, formatDate, toDateInput, fonteColor, mesesLongos, grupoLabel } from '../utils/formatters'
 import { Card } from '../components/ui/Card'
 import { Modal } from '../components/ui/Modal'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
 import { PessoaCombobox } from '../components/ui/PessoaCombobox'
-import type { Divida, FonteRenda, TipoPessoa } from '../types'
+import type { Divida, FonteRenda, GrupoGasto, TipoPessoa } from '../types'
 
 // PMT formula: monthly payment for a loan
 // PV = present value, r = monthly rate (decimal), n = number of payments
@@ -24,6 +24,20 @@ function calcN(PV: number, r: number, pmt: number): number {
   return Math.ceil(Math.log(pmt / (pmt - PV * r)) / Math.log(1 + r))
 }
 
+const gruposOpcoes: { value: GrupoGasto; label: string }[] = [
+  { value: 'divida', label: 'Dívida (geral)' },
+  { value: 'casa', label: 'Casa / Moradia' },
+  { value: 'carro', label: 'Carro / Veículo' },
+  { value: 'educacao', label: 'Educação' },
+  { value: 'saude', label: 'Saúde' },
+  { value: 'viagens', label: 'Viagens' },
+  { value: 'alimentacao', label: 'Alimentação' },
+  { value: 'lazer', label: 'Lazer' },
+  { value: 'aposentadoria', label: 'Aposentadoria' },
+  { value: 'reserva_emergencia', label: 'Reserva de Emergência' },
+  { value: 'outros', label: 'Outros' },
+]
+
 const emptyDivida = (): Omit<Divida, 'id'> => ({
   descricao: '',
   credor: '',
@@ -35,6 +49,7 @@ const emptyDivida = (): Omit<Divida, 'id'> => ({
   dataVencimento: toDateInput(),
   status: 'ativa',
   fonte: 'pessoal',
+  grupo: 'divida',
   parcelas: 12,
   parcelaAtual: 1,
   valorParcela: 0,
@@ -48,7 +63,8 @@ const _tipoFiltro: TipoPessoa[] = ['fornecedor', 'ambos']
 export function Dividas() {
   const {
     dividas, addDivida, updateDivida, deleteDivida,
-    addPagamentoDivida, addContaPagar, pessoas,
+    addPagamentoDivida, addContaPagar, deleteContasPagarByOrigemId,
+    contasPagar, pessoas,
   } = useFinanceStore()
 
   const [modalOpen, setModalOpen] = useState(false)
@@ -58,6 +74,7 @@ export function Dividas() {
   const [pagamentoModal, setPagamentoModal] = useState<Divida | null>(null)
   const [valorPagamento, setValorPagamento] = useState('')
   const [detalhesId, setDetalhesId] = useState<string | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<Divida | null>(null)
 
   // Smart calculator mode: 'parcelas' = user enters N parcelas, 'valor' = user enters monthly value
   const [calcMode, setCalcMode] = useState<'parcelas' | 'valor'>('parcelas')
@@ -202,7 +219,7 @@ export function Dividas() {
     if (editId) {
       updateDivida(editId, d)
     } else {
-      addDivida(d)
+      const newId = addDivida(d)
       if (gerarContasPagar && parcelasPreview.length > 0) {
         parcelasPreview.forEach(p => {
           addContaPagar({
@@ -210,11 +227,12 @@ export function Dividas() {
             valor: p.valor,
             vencimento: p.vencimento,
             status: 'pendente',
-            grupo: 'divida',
+            grupo: form.grupo,
             fonte: form.fonte,
             categoria: 'Dívida',
             prioridade: 'alta',
             origem: 'divida',
+            origemId: newId,
             mesReferencia: p.mes,
             anoReferencia: p.ano,
             pessoaId: form.pessoaId || undefined,
@@ -348,7 +366,8 @@ export function Dividas() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-semibold text-slate-800">{d.descricao}</span>
                       <Badge className={statusBadge(d.status)}>{statusLabel(d.status)}</Badge>
-                      <Badge className={fonteColor[d.fonte]}>{d.fonte}</Badge>
+                      <Badge className={fonteColor[d.fonte]}>{d.fonte === 'empresa' ? 'Empresa' : 'Pessoal'}</Badge>
+                      <Badge className="bg-slate-100 text-slate-600">{grupoLabel[d.grupo] ?? d.grupo}</Badge>
                     </div>
                     <div className="text-sm text-slate-500 mt-0.5">{credorLabel}</div>
                   </div>
@@ -422,7 +441,7 @@ export function Dividas() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => deleteDivida(d.id)}
+                    onClick={() => setDeleteConfirm(d)}
                     className="text-red-500 hover:text-red-600"
                   >
                     <Trash2 size={13} />
@@ -673,6 +692,16 @@ export function Dividas() {
             </select>
           </div>
 
+          {/* Grupo / Categoria */}
+          <div>
+            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+              Grupo / Categoria
+            </label>
+            <select value={form.grupo} onChange={e => f('grupo', e.target.value as GrupoGasto)} className="fi">
+              {gruposOpcoes.map(g => <option key={g.value} value={g.value}>{g.label}</option>)}
+            </select>
+          </div>
+
           {/* Status (edit only) */}
           {editId && (
             <div>
@@ -785,6 +814,45 @@ export function Dividas() {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* ── Modal Confirmação de Exclusão ─────────────────────────────────── */}
+      <Modal open={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Confirmar Exclusão" size="sm">
+        {deleteConfirm && (() => {
+          const vinculadas = contasPagar.filter(c => c.origemId === deleteConfirm.id)
+          return (
+            <div className="space-y-4">
+              <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
+                <AlertTriangle size={20} className="text-red-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-red-700">Tem certeza que deseja excluir esta dívida?</p>
+                  <p className="text-sm text-red-600 mt-1"><strong>{deleteConfirm.descricao}</strong> ({deleteConfirm.credor})</p>
+                </div>
+              </div>
+              {vinculadas.length > 0 && (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700">
+                  <strong>{vinculadas.length} parcela{vinculadas.length > 1 ? 's' : ''}</strong> em Contas a Pagar também {vinculadas.length > 1 ? 'serão excluídas' : 'será excluída'}.
+                  <div className="mt-1.5 text-xs space-y-0.5 max-h-24 overflow-y-auto">
+                    {vinculadas.slice(0, 5).map(c => (
+                      <div key={c.id} className="text-amber-600">{c.descricao} — {formatCurrency(c.valor)}</div>
+                    ))}
+                    {vinculadas.length > 5 && <div className="text-amber-500">+ {vinculadas.length - 5} mais...</div>}
+                  </div>
+                </div>
+              )}
+              <div className="flex gap-3 pt-2">
+                <Button variant="secondary" onClick={() => setDeleteConfirm(null)} className="flex-1">Cancelar</Button>
+                <Button variant="danger" className="flex-1" onClick={() => {
+                  deleteContasPagarByOrigemId(deleteConfirm.id)
+                  deleteDivida(deleteConfirm.id)
+                  setDeleteConfirm(null)
+                }}>
+                  <Trash2 size={14} /> Excluir{vinculadas.length > 0 ? ` + ${vinculadas.length} parcela${vinculadas.length > 1 ? 's' : ''}` : ''}
+                </Button>
+              </div>
+            </div>
+          )
+        })()}
       </Modal>
     </div>
   )

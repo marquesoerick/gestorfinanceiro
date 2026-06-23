@@ -8,17 +8,12 @@ import {
   Target, Building2, AlertTriangle, ChevronRight, Clock, ArrowRight
 } from 'lucide-react'
 import { useFinanceStore } from '../store/useFinanceStore'
-import { formatCurrency, meses } from '../utils/formatters'
+import { formatCurrency, meses, grupoLabel } from '../utils/formatters'
 import { Card, StatCard } from '../components/ui/Card'
 import { Link } from 'react-router-dom'
 
 const COLORS = ['#10b981', '#6366f1', '#f97316', '#ec4899', '#0ea5e9', '#8b5cf6', '#f59e0b', '#84cc16']
 
-const GRUPO_LABEL: Record<string, string> = {
-  moradia: 'Moradia', alimentacao: 'Alimentação', transporte: 'Transporte',
-  saude: 'Saúde', educacao: 'Educação', lazer: 'Lazer',
-  servicos: 'Serviços', outros: 'Outros',
-}
 
 export function Dashboard() {
   const {
@@ -57,7 +52,7 @@ export function Dashboard() {
   const gastosPorGrupo = useMemo(() => {
     const map: Record<string, number> = {}
     contasPagar.forEach(c => { map[c.grupo] = (map[c.grupo] ?? 0) + c.valor })
-    return Object.entries(map).map(([grupo, valor]) => ({ name: GRUPO_LABEL[grupo] ?? grupo, value: valor })).sort((a, b) => b.value - a.value).slice(0, 6)
+    return Object.entries(map).map(([grupo, valor]) => ({ name: grupoLabel[grupo] ?? grupo, value: valor })).sort((a, b) => b.value - a.value).slice(0, 6)
   }, [contasPagar])
 
   const proximosVencimentos = useMemo(() =>
@@ -272,7 +267,7 @@ export function Dashboard() {
                     <div className={`w-1 h-9 rounded-full flex-shrink-0 ${isAtrasado ? 'bg-red-400' : isUrgente ? 'bg-amber-400' : 'bg-slate-200'}`} />
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium text-slate-800 truncate">{conta.descricao}</div>
-                      <div className="text-xs text-slate-400 capitalize mt-0.5">{conta.grupo} · {conta.fonte}</div>
+                      <div className="text-xs text-slate-400 mt-0.5">{grupoLabel[conta.grupo] ?? conta.grupo} · {conta.fonte === 'empresa' ? 'Empresa' : 'Pessoal'}</div>
                     </div>
                     <div className="text-right flex-shrink-0">
                       <div className="text-sm font-bold text-slate-800">{formatCurrency(conta.valor)}</div>

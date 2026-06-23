@@ -149,7 +149,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 
 // ─── Modal: Novo Usuário ──────────────────────────────────────────────────────
 function ModalNovoUsuario({ onClose }: { onClose: () => void }) {
-  const { addUser, updateUser, users } = useAuthStore()
+  const { addUser, updateUser } = useAuthStore()
   const [nome, setNome] = useState('')
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')

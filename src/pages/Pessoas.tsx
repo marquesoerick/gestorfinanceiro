@@ -96,7 +96,7 @@ export function Pessoas() {
     return Object.values(mapa).sort((a, b) => b.total - a.total)
   }, [contaDebitosView, fonteRendaCategorias])
 
-  // Distribuição autom?tica para o pagamento na conta
+  // Distribuição automática para o pagamento na conta
   const distribuicaoConta = useMemo(() => {
     let restante = pagarValorConta
     return contaDebitosView.map(d => {
@@ -202,7 +202,7 @@ export function Pessoas() {
         <Card className="p-12 text-center">
           <Users size={40} className="text-slate-200 mx-auto mb-3" />
           <div className="text-slate-400 font-medium">Nenhuma pessoa encontrada</div>
-          <div className="text-sm text-slate-300 mt-1">Cadastre clientes e fornecedores para us?-los nas contas</div>
+          <div className="text-sm text-slate-300 mt-1">Cadastre clientes e fornecedores para usá-los nas contas</div>
           <Button onClick={openNew} className="mt-4"><Plus size={14} /> Cadastrar Pessoa</Button>
         </Card>
       ) : (
@@ -277,8 +277,8 @@ export function Pessoas() {
               <div className="flex-1">
                 <div className="font-bold text-slate-800 text-base">{contaView.nome}</div>
                 <div className="flex flex-wrap gap-3 mt-1">
-                  {contaView.telefone && <span className="text-xs text-slate-500">?? {contaView.telefone}</span>}
-                  {contaView.email && <span className="text-xs text-slate-500">? {contaView.email}</span>}
+                  {contaView.telefone && <span className="flex items-center gap-1 text-xs text-slate-500"><Phone size={11} className="flex-shrink-0" />{contaView.telefone}</span>}
+                  {contaView.email && <span className="flex items-center gap-1 text-xs text-slate-500"><Mail size={11} className="flex-shrink-0" />{contaView.email}</span>}
                 </div>
               </div>
               <div className="text-right">
@@ -335,7 +335,7 @@ export function Pessoas() {
                         <div className="text-right">
                           <div className="font-bold text-slate-700">{formatCurrency(saldo)}</div>
                           {c.status === 'parcial' && c.valorRecebido && (
-                            <div className="text-xs text-emerald-600">j? pago: {formatCurrency(c.valorRecebido)}</div>
+                            <div className="text-xs text-emerald-600">já pago: {formatCurrency(c.valorRecebido)}</div>
                           )}
                         </div>
                         {item && item.aplicar > 0 && pagarValorConta > 0 && (
@@ -397,7 +397,7 @@ export function Pessoas() {
                         <span className="flex-1 text-slate-600 truncate">{item.d.descricao}</span>
                         <span className="font-semibold text-emerald-700">+{formatCurrency(item.aplicar)}</span>
                         <span className={`px-1.5 py-0.5 rounded font-medium ${item.novoStatus === 'pago' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                          {item.novoStatus === 'pago' ? '? Quitado' : 'Parcial'}
+                          {item.novoStatus === 'pago' ? 'Quitado' : 'Parcial'}
                         </span>
                       </div>
                     ))}

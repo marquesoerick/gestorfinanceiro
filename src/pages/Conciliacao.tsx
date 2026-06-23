@@ -9,7 +9,7 @@ import { Badge } from '../components/ui/Badge'
 
 const emptyForm = () => ({
   data: toDateInput(), descricao: '', valor: 0,
-  tipo: 'debito' as 'debito' | 'credito', banco: 'Ita?',
+  tipo: 'debito' as 'debito' | 'credito', banco: '',
   categoria: '', conciliado: false, statusConciliacao: 'pendente' as const
 })
 

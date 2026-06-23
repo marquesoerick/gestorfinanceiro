@@ -77,7 +77,7 @@ export const useFinanceStore = create<FinanceStore>()(
       updateTransacao: (id, t) => set((s) => ({ transacoesBancarias: s.transacoesBancarias.map(x => x.id === id ? { ...x, ...t } : x) })),
       deleteTransacao: (id) => set((s) => ({ transacoesBancarias: s.transacoesBancarias.filter(x => x.id !== id) })),
 
-      addDivida: (d) => set((s) => ({ dividas: [...s.dividas, { ...d, id: uid() }] })),
+      addDivida: (d) => { const id = uid(); set((s) => ({ dividas: [...s.dividas, { ...d, id }] })); return id },
       updateDivida: (id, d) => set((s) => ({ dividas: s.dividas.map(x => x.id === id ? { ...x, ...d } : x) })),
       deleteDivida: (id) => set((s) => ({ dividas: s.dividas.filter(x => x.id !== id) })),
       addPagamentoDivida: (dividaId, pagamento) => set((s) => ({
@@ -93,7 +93,7 @@ export const useFinanceStore = create<FinanceStore>()(
         })
       })),
 
-      addPlanejamento: (p) => set((s) => ({ planejamentos: [...s.planejamentos, { ...p, id: uid() }] })),
+      addPlanejamento: (p) => { const id = uid(); set((s) => ({ planejamentos: [...s.planejamentos, { ...p, id }] })); return id },
       updatePlanejamento: (id, p) => set((s) => ({ planejamentos: s.planejamentos.map(x => x.id === id ? { ...x, ...p } : x) })),
       deletePlanejamento: (id) => set((s) => ({ planejamentos: s.planejamentos.filter(x => x.id !== id) })),
       addAportePlanejamento: (planejamentoId, aporte) => set((s) => ({
@@ -103,6 +103,8 @@ export const useFinanceStore = create<FinanceStore>()(
           return { ...p, valorAtual: p.valorAtual + aporte.valor, historico: [...p.historico, a] }
         })
       })),
+
+      deleteContasPagarByOrigemId: (origemId) => set((s) => ({ contasPagar: s.contasPagar.filter(c => c.origemId !== origemId) })),
 
       addFonteRenda: (f) => set((s) => ({ fontesRenda: [...s.fontesRenda, { ...f, id: uid() }] })),
       updateFonteRenda: (id, f) => set((s) => ({ fontesRenda: s.fontesRenda.map(x => x.id === id ? { ...x, ...f } : x) })),

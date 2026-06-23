@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Plus, Pencil, Trash2, CheckCircle, Filter, Lock, AlertTriangle, ArrowRight, LockOpen, RefreshCw, User, UserPlus, X, ChevronDown } from 'lucide-react'
+import { Plus, Pencil, Trash2, CheckCircle, Filter, Lock, AlertTriangle, ArrowRight, LockOpen, RefreshCw, User, UserPlus, ChevronDown } from 'lucide-react'
 import { PessoaCombobox } from '../components/ui/PessoaCombobox'
 import { useFinanceStore } from '../store/useFinanceStore'
 import {
@@ -17,7 +17,6 @@ import { MesNavigator } from '../components/ui/MesNavigator'
 import type { ContaPagar, GrupoGasto, FonteRenda, StatusConta, Prioridade, TipoPessoa } from '../types'
 
 const grupos: GrupoGasto[] = ['casa','carro','viagens','alimentacao','saude','educacao','lazer','reserva_emergencia','aposentadoria','divida','outros']
-const fontes: FonteRenda[] = ['pessoal','empresa']
 const prioridades: Prioridade[] = ['alta','media','baixa']
 
 const emptyForm = (): Omit<ContaPagar, 'id'> => ({

@@ -223,7 +223,7 @@ export function Configuracoes() {
           {store.fonteRendaCategorias.length === 0 && (
             <div className="mx-5 my-3 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-700">
               ⚠ Cadastre pelo menos uma <strong>Fonte de Renda</strong> antes de adicionar produtos.
-              <button onClick={() => setAba('fontes')} className="ml-2 underline font-medium">Ir para Fontes ?</button>
+              <button onClick={() => setAba('fontes')} className="ml-2 underline font-medium">Ir para Fontes →</button>
             </div>
           )}
           {store.produtos.length === 0 ? (
@@ -395,7 +395,9 @@ export function Configuracoes() {
         <div className="max-w-2xl mx-auto space-y-4">
           <Card title="Sobre o Gestor Financeiro">
             <div className="p-5 flex items-start gap-4">
-              <div className="w-14 h-14 bg-emerald-500 rounded-2xl flex items-center justify-center flex-shrink-0 text-2xl">??</div>
+              <div className="w-14 h-14 bg-emerald-500 rounded-2xl flex items-center justify-center flex-shrink-0">
+                <TrendingUp size={28} className="text-white" />
+              </div>
               <div>
                 <h3 className="font-bold text-slate-800 text-lg">Gestor Financeiro</h3>
                 <p className="text-sm text-slate-500 mt-1">Dados armazenados localmente. 100% privado.</p>
@@ -519,7 +521,7 @@ export function Configuracoes() {
             {store.fonteRendaCategorias.length === 0 ? (
               <div className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-3">
                 Cadastre uma Fonte de Renda primeiro.
-                <button onClick={() => { setPrModal(false); setAba('fontes'); openFNew() }} className="ml-1 underline font-medium">Cadastrar agora ?</button>
+                <button onClick={() => { setPrModal(false); setAba('fontes'); openFNew() }} className="ml-1 underline font-medium">Cadastrar agora →</button>
               </div>
             ) : (
               <select value={prForm.fonteRendaId} onChange={e => fpr('fonteRendaId', e.target.value)}
