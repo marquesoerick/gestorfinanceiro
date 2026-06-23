@@ -310,8 +310,12 @@ function ModalEditarAssinatura({ user, onClose }: { user: AuthUser; onClose: () 
   const [plano, setPlano] = useState<PlanoAssinatura>(existing?.plano ?? 'basico')
   const [expiraEm, setExpiraEm] = useState(existing?.expiraEm?.split('T')[0] ?? '')
   const [observacoes, setObservacoes] = useState(existing?.observacoes ?? '')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleSave = async () => {
+    setLoading(true)
+    setError('')
     const assinatura: Assinatura = {
       status,
       plano,
@@ -319,7 +323,12 @@ function ModalEditarAssinatura({ user, onClose }: { user: AuthUser; onClose: () 
       observacoes: observacoes.trim() || undefined,
       criadaEm: existing?.criadaEm ?? new Date().toISOString(),
     }
-    await updateUser(user.id, { assinatura })
+    const result = await updateUser(user.id, { assinatura })
+    setLoading(false)
+    if (!result.success) {
+      setError(result.error ?? 'Erro ao salvar')
+      return
+    }
     onClose()
   }
 
@@ -353,12 +362,18 @@ function ModalEditarAssinatura({ user, onClose }: { user: AuthUser; onClose: () 
           <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Observações</label>
           <textarea className={`${INP} resize-none`} rows={3} value={observacoes} onChange={e => setObservacoes(e.target.value)} placeholder="Observações internas..." />
         </div>
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl flex items-center gap-2">
+            <AlertTriangle size={14} />
+            <span>{error}</span>
+          </div>
+        )}
         <div className="flex gap-3 pt-2">
-          <button onClick={onClose} className="flex-1 py-2.5 border border-slate-200 text-slate-600 font-semibold rounded-xl text-sm hover:bg-slate-50 transition-colors">
+          <button onClick={onClose} disabled={loading} className="flex-1 py-2.5 border border-slate-200 text-slate-600 font-semibold rounded-xl text-sm hover:bg-slate-50 transition-colors disabled:opacity-50">
             Cancelar
           </button>
-          <button onClick={handleSave} className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm transition-colors">
-            Salvar
+          <button onClick={handleSave} disabled={loading} className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-semibold rounded-xl text-sm transition-colors">
+            {loading ? 'Salvando...' : 'Salvar'}
           </button>
         </div>
       </div>
@@ -506,9 +521,18 @@ function ModalAlterarSenha({ user, onClose }: { user: AuthUser; onClose: () => v
 // ─── Modal: Excluir Usuário ───────────────────────────────────────────────────
 function ModalExcluirUsuario({ user, onClose }: { user: AuthUser; onClose: () => void }) {
   const { deleteUser } = useAuthStore()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleConfirm = () => {
-    deleteUser(user.id)
+  const handleConfirm = async () => {
+    setLoading(true)
+    setError('')
+    const result = await deleteUser(user.id)
+    if (!result.success) {
+      setError(result.error ?? 'Erro ao excluir usuário')
+      setLoading(false)
+      return
+    }
     localStorage.removeItem(`gestor-data-${user.id}`)
     onClose()
   }
@@ -531,12 +555,18 @@ function ModalExcluirUsuario({ user, onClose }: { user: AuthUser; onClose: () =>
           <div className="flex justify-between"><span className="font-medium">Usuário:</span><span>@{user.username}</span></div>
           <div className="flex justify-between mt-1"><span className="font-medium">Dados armazenados:</span><span>{dataSize(user.id)}</span></div>
         </div>
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl flex items-center gap-2">
+            <AlertTriangle size={14} />
+            <span>{error}</span>
+          </div>
+        )}
         <div className="flex gap-3 pt-2">
-          <button onClick={onClose} className="flex-1 py-2.5 border border-slate-200 text-slate-600 font-semibold rounded-xl text-sm hover:bg-slate-50 transition-colors">
+          <button onClick={onClose} disabled={loading} className="flex-1 py-2.5 border border-slate-200 text-slate-600 font-semibold rounded-xl text-sm hover:bg-slate-50 transition-colors disabled:opacity-50">
             Cancelar
           </button>
-          <button onClick={handleConfirm} className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl text-sm transition-colors">
-            Excluir Definitivamente
+          <button onClick={handleConfirm} disabled={loading} className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-semibold rounded-xl text-sm transition-colors">
+            {loading ? 'Excluindo...' : 'Excluir Definitivamente'}
           </button>
         </div>
       </div>

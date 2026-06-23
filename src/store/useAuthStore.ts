@@ -35,8 +35,8 @@ interface AuthStore {
   addUser: (email: string, password: string, nome: string, username?: string) => Promise<{ success: boolean; error?: string; userId?: string }>
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<void>
-  updateUser: (userId: string, updates: Partial<Pick<AuthUser, 'nome' | 'email' | 'assinatura'>>) => Promise<void>
-  deleteUser: (userId: string) => void
+  updateUser: (userId: string, updates: Partial<Pick<AuthUser, 'nome' | 'email' | 'assinatura'>>) => Promise<{ success: boolean; error?: string }>
+  deleteUser: (userId: string) => Promise<{ success: boolean; error?: string }>
   changePassword: (newPassword: string) => Promise<{ success: boolean; error?: string }>
 }
 
@@ -203,12 +203,22 @@ export const useAuthStore = create<AuthStore>()(
           .from('user_profiles')
           .update(profileUpdate)
           .eq('id', userId)
-        if (error) console.error('updateUser error:', error.message)
+        if (error) {
+          console.error('updateUser error:', error.message)
+          return { success: false, error: error.message }
+        }
         await get().fetchUsers()
+        return { success: true }
       },
 
-      deleteUser: (_userId) => {
-        console.warn('deleteUser requer Admin API — use o painel do Supabase para excluir usuários')
+      deleteUser: async (userId) => {
+        const { error } = await supabase.rpc('admin_delete_user', { p_user_id: userId })
+        if (error) {
+          console.error('deleteUser error:', error.message)
+          return { success: false, error: error.message }
+        }
+        await get().fetchUsers()
+        return { success: true }
       },
 
       changePassword: async (newPassword) => {
