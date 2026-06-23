@@ -160,11 +160,31 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       login: async (email, password) => {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
+        const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
           email: email.trim(),
           password
         })
         if (signInError) return { success: false, error: friendlyError(signInError.message) }
+
+        // Busca perfil explicitamente para dar erro claro ao invés de silêncio
+        const userId = authData.user?.id
+        if (!userId) return { success: false, error: 'Sessão inválida após login.' }
+
+        const { data: profile, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', userId)
+          .single()
+
+        if (profileError) {
+          await supabase.auth.signOut()
+          return { success: false, error: `Erro de perfil (${profileError.code}): ${profileError.message}` }
+        }
+        if (!profile) {
+          await supabase.auth.signOut()
+          return { success: false, error: 'Perfil não encontrado. Execute o SQL de correção no Supabase Dashboard.' }
+        }
+
         return { success: true }
       },
 
