@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Plus, Pencil, Trash2, CheckCircle, Filter, Lock, AlertTriangle, ArrowRight, LockOpen, RefreshCw, User, UserPlus, X, ChevronDown } from 'lucide-react'
+import { PessoaCombobox } from '../components/ui/PessoaCombobox'
 import { useFinanceStore } from '../store/useFinanceStore'
 import {
   formatCurrency, formatDate, toDateInput, grupoLabel, statusLabel,
@@ -15,7 +16,7 @@ import { Input, Select, Textarea } from '../components/ui/Input'
 import { MesNavigator } from '../components/ui/MesNavigator'
 import type { ContaPagar, GrupoGasto, FonteRenda, StatusConta, Prioridade, TipoPessoa } from '../types'
 
-const grupos: GrupoGasto[] = ['casa','carro','viagens','alimentacao','saude','educacao','lazer','outros']
+const grupos: GrupoGasto[] = ['casa','carro','viagens','alimentacao','saude','educacao','lazer','reserva_emergencia','aposentadoria','divida','outros']
 const fontes: FonteRenda[] = ['pessoal','empresa']
 const prioridades: Prioridade[] = ['alta','media','baixa']
 
@@ -49,6 +50,7 @@ export function ContasPagar() {
   const [qpNome, setQpNome] = useState('')
   const [qpTipo, setQpTipo] = useState<TipoPessoa>('fornecedor')
   const [qpTelefone, setQpTelefone] = useState('')
+  const [erros, setErros] = useState<Record<string, string>>({})
 
   const isFechado = mesesFechados.some(m => m.mes === mesAtivo && m.ano === anoAtivo)
   const infoFechado = mesesFechados.find(m => m.mes === mesAtivo && m.ano === anoAtivo)
@@ -121,14 +123,14 @@ export function ContasPagar() {
     const defaultVenc = `${anoAtivo}-${String(mesAtivo).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
     setForm({ ...emptyForm(), vencimento: defaultVenc })
     setEditId(null)
-    setQuickPessoa(false); setQpNome(''); setMaisOpcoes(false)
+    setQuickPessoa(false); setQpNome(''); setMaisOpcoes(false); setErros({})
     setModalOpen(true)
   }
 
   const openEdit = (c: ContaPagar) => {
     setForm({ ...c })
     setEditId(c.id)
-    setQuickPessoa(false); setQpNome(''); setMaisOpcoes(false)
+    setQuickPessoa(false); setQpNome(''); setMaisOpcoes(false); setErros({})
     setModalOpen(true)
   }
 
@@ -142,8 +144,21 @@ export function ContasPagar() {
     setQpNome(''); setQpTelefone(''); setQuickPessoa(false)
   }
 
+  const f = (k: keyof ReturnType<typeof emptyForm>, v: unknown) => {
+    setForm(prev => ({ ...prev, [k]: v }))
+    setErros(prev => { const next = { ...prev }; delete next[k as string]; return next })
+  }
+
   const save = () => {
-    if (!form.descricao || !form.valor) return
+    const novosErros: Record<string, string> = {}
+    if (!form.pessoaId) novosErros.pessoaId = 'Informe a quem esta conta pertence'
+    if (!form.descricao?.trim()) novosErros.descricao = 'Informe uma descrição para a conta'
+    if (!form.valor || form.valor <= 0) novosErros.valor = 'Informe um valor maior que zero'
+    if (!form.vencimento) novosErros.vencimento = 'Informe a data de vencimento'
+    if (!form.grupo) novosErros.grupo = 'Selecione o grupo da despesa'
+    if (!form.fonte) novosErros.fonte = 'Selecione a fonte ou empresa'
+    if (Object.keys(novosErros).length > 0) { setErros(novosErros); return }
+
     const baseDate = new Date(form.vencimento + 'T00:00:00')
 
     if (editId) {
@@ -186,7 +201,6 @@ export function ContasPagar() {
     setFecharModal(false)
   }
 
-  const f = (k: keyof typeof form, v: unknown) => setForm(prev => ({ ...prev, [k]: v }))
 
   return (
     <div className="space-y-5">
@@ -454,23 +468,17 @@ export function ContasPagar() {
 
           {/* ── Bloco 1: Para quem? ── */}
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-bold text-slate-600 uppercase tracking-wide">
-                A quem?
-              </label>
-              <button type="button" onClick={() => { setQuickPessoa(v => !v); setQpNome('') }}
-                className={`flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full transition-colors
-                  ${quickPessoa ? 'bg-blue-100 text-blue-700' : 'text-blue-500 hover:bg-blue-50'}`}>
-                {quickPessoa ? <X size={11} /> : <UserPlus size={11} />}
-                {quickPessoa ? 'Cancelar' : 'Nova pessoa'}
-              </button>
-            </div>
-            <select value={form.pessoaId ?? ''} onChange={e => f('pessoaId', e.target.value || undefined)} className="fi">
-              <option value="">Selecione a quem</option>
-              {pessoas.filter(p => p.ativa && (p.tipo === 'fornecedor' || p.tipo === 'ambos')).map(p => (
-                <option key={p.id} value={p.id}>{p.nome}</option>
-              ))}
-            </select>
+            <PessoaCombobox
+              pessoas={pessoas}
+              value={form.pessoaId ?? ''}
+              onChange={id => f('pessoaId', id || undefined)}
+              label="A quem? *"
+              placeholder="Buscar fornecedor / credor..."
+              tipoFiltro={['fornecedor', 'ambos']}
+              onQuickAdd={(nome) => { setQuickPessoa(true); setQpNome(nome ?? '') }}
+              quickAddLabel={quickPessoa ? 'Cancelar' : 'Nova pessoa'}
+              error={erros.pessoaId}
+            />
             {quickPessoa && (
               <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-xl space-y-2">
                 <div className="text-xs font-semibold text-blue-700 flex items-center gap-1">
@@ -498,42 +506,57 @@ export function ContasPagar() {
 
           {/* ── Bloco 2: O essencial ── */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <Input span2 label="Descrição *" value={form.descricao} onChange={e => f('descricao', e.target.value)}
-              placeholder="Ex: Aluguel, Energia, Fornecedor X..." autoFocus />
-            <Input label="Valor *" type="number" value={form.valor || ''}
-              onChange={e => f('valor', parseFloat(e.target.value))} placeholder="0,00" />
-            <Input label="Vencimento *" type="date" value={form.vencimento}
-              onChange={e => f('vencimento', e.target.value)} />
+            <div className="md:col-span-2">
+              <Input span2 label="Descrição *" value={form.descricao} onChange={e => f('descricao', e.target.value)}
+                placeholder="Ex: Aluguel, Energia, Fornecedor X..." autoFocus />
+              {erros.descricao && <p className="text-xs text-red-500 mt-1 flex items-center gap-1">⚠ {erros.descricao}</p>}
+            </div>
+            <div>
+              <Input label="Valor *" type="number" value={form.valor || ''}
+                onChange={e => f('valor', parseFloat(e.target.value))} placeholder="0,00" />
+              {erros.valor && <p className="text-xs text-red-500 mt-1 flex items-center gap-1">⚠ {erros.valor}</p>}
+            </div>
+            <div>
+              <Input label="Vencimento *" type="date" value={form.vencimento}
+                onChange={e => f('vencimento', e.target.value)} />
+              {erros.vencimento && <p className="text-xs text-red-500 mt-1 flex items-center gap-1">⚠ {erros.vencimento}</p>}
+            </div>
           </div>
 
           {/* ── Bloco 3: Classificação ── */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <Select label="Grupo" value={form.grupo} onChange={e => f('grupo', e.target.value)}>
-              {grupos.map(g => <option key={g} value={g}>{grupoLabel[g]}</option>)}
-            </Select>
-            <Select
-              label="Fonte / Empresa"
-              hint={fonteRendaCategorias.filter(fc => fc.ativa).length > 0 ? 'Pessoal ou qual fonte de renda arca com esta despesa' : undefined}
-              value={form.fonteRendaId ?? form.fonte}
-              onChange={e => {
-                const val = e.target.value
-                if (val === 'pessoal' || val === 'empresa') {
-                  f('fonte', val as FonteRenda)
-                  f('fonteRendaId', undefined)
-                } else {
-                  f('fonte', 'empresa')
-                  f('fonteRendaId', val)
+            <div>
+              <Select label="Grupo *" value={form.grupo} onChange={e => f('grupo', e.target.value)}>
+                {grupos.map(g => <option key={g} value={g}>{grupoLabel[g]}</option>)}
+              </Select>
+              {erros.grupo && <p className="text-xs text-red-500 mt-1 flex items-center gap-1">⚠ {erros.grupo}</p>}
+            </div>
+            <div>
+              <Select
+                label="Fonte / Empresa *"
+                hint={fonteRendaCategorias.filter(fc => fc.ativa).length > 0 ? 'Pessoal ou qual fonte de renda arca com esta despesa' : undefined}
+                value={form.fonteRendaId ?? form.fonte}
+                onChange={e => {
+                  const val = e.target.value
+                  if (val === 'pessoal' || val === 'empresa') {
+                    f('fonte', val as FonteRenda)
+                    f('fonteRendaId', undefined)
+                  } else {
+                    f('fonte', 'empresa')
+                    f('fonteRendaId', val)
+                  }
+                }}
+              >
+                <option value="pessoal">Pessoal</option>
+                {fonteRendaCategorias.filter(fc => fc.ativa).length > 0
+                  ? fonteRendaCategorias.filter(fc => fc.ativa).map(fc => (
+                      <option key={fc.id} value={fc.id}>{fc.nome}</option>
+                    ))
+                  : <option value="empresa">Empresa</option>
                 }
-              }}
-            >
-              <option value="pessoal">Pessoal</option>
-              {fonteRendaCategorias.filter(fc => fc.ativa).length > 0
-                ? fonteRendaCategorias.filter(fc => fc.ativa).map(fc => (
-                    <option key={fc.id} value={fc.id}>{fc.nome}</option>
-                  ))
-                : <option value="empresa">Empresa</option>
-              }
-            </Select>
+              </Select>
+              {erros.fonte && <p className="text-xs text-red-500 mt-1 flex items-center gap-1">⚠ {erros.fonte}</p>}
+            </div>
             <Select label="Prioridade" value={form.prioridade ?? 'media'} onChange={e => f('prioridade', e.target.value as Prioridade)}>
               {prioridades.map(p => <option key={p} value={p}>{prioridadeIcone[p]} {prioridadeLabel[p]}</option>)}
             </Select>

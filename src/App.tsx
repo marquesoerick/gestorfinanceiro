@@ -14,38 +14,41 @@ import { ContasBancarias } from './pages/ContasBancarias'
 import { Configuracoes } from './pages/Configuracoes'
 import { ImportarExtrato } from './pages/ImportarExtrato'
 import { Pessoas } from './pages/Pessoas'
+import { Admin } from './pages/Admin'
+import { ResetSenha } from './pages/ResetSenha'
 
 function App() {
   const { currentUserId } = useAuthStore()
 
-  if (!currentUserId) {
-    return (
-      <BrowserRouter>
-        <Routes>
-          <Route path="*" element={<Login />} />
-        </Routes>
-      </BrowserRouter>
-    )
-  }
-
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<Navigate to="/" replace />} />
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="contas-pagar" element={<ContasPagar />} />
-          <Route path="contas-receber" element={<ContasReceber />} />
-          <Route path="conciliacao" element={<Conciliacao />} />
-          <Route path="dividas" element={<Dividas />} />
-          <Route path="planejamentos" element={<Planejamentos />} />
-          <Route path="rendas" element={<Rendas />} />
-          <Route path="provisionamento" element={<Provisionamento />} />
-          <Route path="contas-bancarias" element={<ContasBancarias />} />
-          <Route path="importar-extrato" element={<ImportarExtrato />} />
-          <Route path="pessoas" element={<Pessoas />} />
-          <Route path="configuracoes" element={<Configuracoes />} />
-        </Route>
+        {/* Always accessible */}
+        <Route path="/admin" element={<Admin />} />
+        <Route path="/reset-senha" element={<ResetSenha />} />
+
+        {/* Auth-gated routes */}
+        {!currentUserId ? (
+          <Route path="*" element={<Login />} />
+        ) : (
+          <>
+            <Route path="/login" element={<Navigate to="/" replace />} />
+            <Route path="/" element={<Layout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="contas-pagar" element={<ContasPagar />} />
+              <Route path="contas-receber" element={<ContasReceber />} />
+              <Route path="conciliacao" element={<Conciliacao />} />
+              <Route path="dividas" element={<Dividas />} />
+              <Route path="planejamentos" element={<Planejamentos />} />
+              <Route path="rendas" element={<Rendas />} />
+              <Route path="provisionamento" element={<Provisionamento />} />
+              <Route path="contas-bancarias" element={<ContasBancarias />} />
+              <Route path="importar-extrato" element={<ImportarExtrato />} />
+              <Route path="pessoas" element={<Pessoas />} />
+              <Route path="configuracoes" element={<Configuracoes />} />
+            </Route>
+          </>
+        )}
       </Routes>
     </BrowserRouter>
   )

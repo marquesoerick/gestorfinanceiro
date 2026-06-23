@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Plus, Pencil, Trash2, CheckCircle, Filter, Building2, UserPlus, Package, X, ChevronDown } from 'lucide-react'
+import { PessoaCombobox } from '../components/ui/PessoaCombobox'
 import { useFinanceStore } from '../store/useFinanceStore'
 import {
   formatCurrency, formatDate, toDateInput, statusLabel, statusColor, mesesLongos
@@ -48,6 +49,10 @@ const emptyForm = () => ({
   parcelas: 1,
   diaPagamento: new Date().getDate(),
   itens: [newItem()] as ItemVenda[],
+  // Recebimento simples
+  valorRecebimento: 0,
+  recorrente: false,
+  fonteRendaId: '',
 })
 
 type FormType = ReturnType<typeof emptyForm>
@@ -75,6 +80,8 @@ export function ContasReceber() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editId, setEditId] = useState<string | null>(null)
   const [form, setForm] = useState<FormType>(emptyForm)
+  const [tipoModal, setTipoModal] = useState<'recebimento' | 'venda'>('recebimento')
+  const [erros, setErros] = useState<Record<string, string>>({})
   const [filtroStatus, setFiltroStatus] = useState<string>('todos')
   const [filtroFonte, setFiltroFonte] = useState<string>('todos')
 
@@ -401,13 +408,14 @@ export function ContasReceber() {
     (form.itens.filter(it => it.valor > 0).length > 1 || form.parcelas > 1)
 
   // --- Abrir modais -------------------------------------------------
-  const openNew = () => {
+  const openNew = (tipo: 'recebimento' | 'venda' = 'recebimento') => {
     const d = new Date()
     setForm({
       ...emptyForm(),
       vencimento: `${anoAtivo}-${String(mesAtivo).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
       diaPagamento: d.getDate(),
     })
+    setTipoModal(tipo); setErros({})
     setEditId(null); setQuickPessoa(false); setQuickProduto(false); setModalOpen(true)
   }
 
@@ -423,14 +431,63 @@ export function ContasReceber() {
       parcelas: c.parcelas ?? 1,
       diaPagamento: c.diaPagamento ?? new Date().getDate(),
       itens: [{ _id: Math.random().toString(36).slice(2), produtoId: c.produtoId ?? '', fonteRendaId: c.fonteRendaId ?? '', descricao: c.descricao, valor: c.valor }],
+      valorRecebimento: c.valor,
+      recorrente: false,
+      fonteRendaId: c.fonteRendaId ?? '',
     })
+    setTipoModal(c.produtoId ? 'venda' : 'recebimento'); setErros({})
     setEditId(c.id); setQuickPessoa(false); setQuickProduto(false); setModalOpen(true)
   }
 
   // --- Salvar -------------------------------------------------------
   const save = () => {
+    // ── RECEBIMENTO ─────────────────────────────────────────────────
+    if (tipoModal === 'recebimento' && !editId) {
+      const novosErros: Record<string, string> = {}
+      if (!form.pessoaId) novosErros.pessoaId = 'Informe de quem é este recebimento'
+      if (!form.valorRecebimento || form.valorRecebimento <= 0) novosErros.valorRecebimento = 'Informe o valor a receber'
+      if (!form.vencimento) novosErros.vencimento = 'Informe a data'
+      if (!form.fonteRendaId && form.fonte !== 'pessoal') novosErros.fonteRendaId = 'Selecione a conta ou fonte de renda'
+      if (Object.keys(novosErros).length > 0) { setErros(novosErros); return }
+
+      const count = form.recorrente && form.parcelas > 1 ? form.parcelas : 1
+      const pessoa = pessoas.find(p => p.id === form.pessoaId)
+      const desc = pessoa?.nome ?? 'Recebimento'
+      const baseDate = new Date(form.vencimento + 'T00:00:00')
+
+      for (let i = 0; i < count; i++) {
+        const d = new Date(baseDate.getFullYear(), baseDate.getMonth() + i, baseDate.getDate())
+        addContaReceber({
+          descricao: count > 1 ? `${desc} ${String(i + 1).padStart(2, '0')}/${String(count).padStart(2, '0')}` : desc,
+          valor: form.valorRecebimento,
+          vencimento: d.toISOString().split('T')[0],
+          status: 'pendente',
+          fonte: form.fonteRendaId ? 'empresa' : form.fonte,
+          categoria: 'Recebimento',
+          pessoaId: form.pessoaId || undefined,
+          fonteRendaId: form.fonteRendaId || undefined,
+          mesReferencia: d.getMonth() + 1,
+          anoReferencia: d.getFullYear(),
+          parcelas: count > 1 ? count : undefined,
+          parcelaAtual: count > 1 ? i + 1 : undefined,
+          observacoes: form.observacoes || undefined,
+        })
+      }
+      setModalOpen(false)
+      return
+    }
+
+    // ── VENDA / EDIÇÃO ───────────────────────────────────────────────
     const itensValidos = form.itens.filter(it => it.valor > 0)
+    if (!editId) {
+      const novosErros: Record<string, string> = {}
+      if (!form.pessoaId) novosErros.pessoaId = 'Informe de quem é esta venda'
+      if (!form.vencimento) novosErros.vencimento = 'Informe a data'
+      if (!itensValidos.length) novosErros.itens = 'Adicione ao menos um item com valor'
+      if (Object.keys(novosErros).length > 0) { setErros(novosErros); return }
+    }
     if (!itensValidos.length) return
+
     if (editId) {
       const item = itensValidos[0]
       const nome = item.descricao || produtos.find(p => p.id === item.produtoId)?.nome || 'Recebimento'
@@ -450,7 +507,7 @@ export function ContasReceber() {
       for (const entry of allEntries) {
         addContaReceber({
           descricao: entry.descricao, valor: entry.valor, vencimento: entry.vencimento,
-          status: 'pendente', fonte: form.fonte, categoria: form.categoria || 'Recebimento',
+          status: 'pendente', fonte: form.fonte, categoria: form.categoria || 'Venda',
           prioridade: form.prioridade,
           pessoaId: form.pessoaId || undefined,
           produtoId: entry.produtoId || undefined,
@@ -466,8 +523,10 @@ export function ContasReceber() {
     setModalOpen(false)
   }
 
-  const f = (k: Exclude<keyof FormType, 'itens'>, v: unknown) =>
+  const f = (k: Exclude<keyof FormType, 'itens'>, v: unknown) => {
     setForm(prev => ({ ...prev, [k]: v }))
+    setErros(prev => { const n = { ...prev }; delete n[k as string]; return n })
+  }
 
   const pessoaSelecionada = pessoas.find(p => p.id === form.pessoaId)
   const totalItens = form.itens.reduce((s, it) => s + it.valor, 0)
@@ -477,7 +536,10 @@ export function ContasReceber() {
       {/* Navegação Mensal */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <MesNavigator />
-        <Button onClick={openNew}><Plus size={16} /> Nova Venda</Button>
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={() => openNew('recebimento')}><Plus size={14} /> Recebimento</Button>
+          <Button onClick={() => openNew('venda')}><Plus size={14} /> Nova Venda</Button>
+        </div>
       </div>
 
       {/* KPIs */}
@@ -571,9 +633,9 @@ export function ContasReceber() {
                     {grupo.status !== 'pago' && (
                       <button
                         onClick={e => { e.stopPropagation(); abrirPagarGrupo(grupo) }}
-                        className="p-1.5 rounded-lg hover:bg-emerald-50 text-emerald-600 flex-shrink-0"
+                        className="p-2.5 rounded-xl hover:bg-emerald-50 text-emerald-600 flex-shrink-0 touch-manipulation"
                         title="Registrar pagamento">
-                        <CheckCircle size={16} />
+                        <CheckCircle size={18} />
                       </button>
                     )}
                     <ChevronDown
@@ -592,7 +654,7 @@ export function ContasReceber() {
                         const saldoItem = c.valor - (c.valorRecebido ?? 0)
                         return (
                           <div key={c.id}
-                            className={`flex items-center gap-3 pl-16 pr-5 py-3 border-b border-slate-100 last:border-b-0
+                            className={`flex items-center gap-3 pl-3 sm:pl-16 pr-3 sm:pr-5 py-3 border-b border-slate-100 last:border-b-0
                               ${atrasadoItem ? 'bg-red-50/40' : idx % 2 === 0 ? 'bg-white/60' : 'bg-slate-50/60'}`}>
                             {/* Cor da fonte */}
                             <div className="w-2 h-2 rounded-full flex-shrink-0"
@@ -624,9 +686,9 @@ export function ContasReceber() {
                               )}
                             </div>
                             <Badge className={statusColor[c.status]}>{statusLabel[c.status]}</Badge>
-                            <div className="flex gap-0.5 flex-shrink-0">
-                              <button onClick={() => openEdit(c)} className="p-1.5 rounded hover:bg-blue-50 text-blue-400"><Pencil size={13} /></button>
-                              <button onClick={() => deleteContaReceber(c.id)} className="p-1.5 rounded hover:bg-red-50 text-red-400"><Trash2 size={13} /></button>
+                            <div className="flex gap-1 flex-shrink-0">
+                              <button onClick={() => openEdit(c)} className="p-2 rounded-lg hover:bg-blue-50 text-blue-400 touch-manipulation"><Pencil size={14} /></button>
+                              <button onClick={() => deleteContaReceber(c.id)} className="p-2 rounded-lg hover:bg-red-50 text-red-400 touch-manipulation"><Trash2 size={14} /></button>
                             </div>
                           </div>
                         )
@@ -672,12 +734,12 @@ export function ContasReceber() {
                       </div>
                       <div className="font-semibold text-sm text-slate-700 flex-shrink-0">{formatCurrency(c.valor)}</div>
                       <Badge className={statusColor[c.status]}>{statusLabel[c.status]}</Badge>
-                      <div className="flex gap-0.5 flex-shrink-0">
+                      <div className="flex gap-1 flex-shrink-0">
                         {c.status !== 'pago' && (
-                          <button onClick={() => abrirPagarModal(c)} className="p-1.5 rounded hover:bg-emerald-50 text-emerald-600"><CheckCircle size={15} /></button>
+                          <button onClick={() => abrirPagarModal(c)} className="p-2 rounded-lg hover:bg-emerald-50 text-emerald-600 touch-manipulation"><CheckCircle size={16} /></button>
                         )}
-                        <button onClick={() => openEdit(c)} className="p-1.5 rounded hover:bg-blue-50 text-blue-400"><Pencil size={15} /></button>
-                        <button onClick={() => deleteContaReceber(c.id)} className="p-1.5 rounded hover:bg-red-50 text-red-400"><Trash2 size={15} /></button>
+                        <button onClick={() => openEdit(c)} className="p-2 rounded-lg hover:bg-blue-50 text-blue-400 touch-manipulation"><Pencil size={16} /></button>
+                        <button onClick={() => deleteContaReceber(c.id)} className="p-2 rounded-lg hover:bg-red-50 text-red-400 touch-manipulation"><Trash2 size={16} /></button>
                       </div>
                     </div>
                   )
@@ -688,31 +750,50 @@ export function ContasReceber() {
         )}
       </Card>
 
-      {/* --- Modal: Nova Venda / Editar -------------------------------- */}
+      {/* --- Modal --------------------------------------------------- */}
       <Modal open={modalOpen} onClose={() => setModalOpen(false)}
-        title={editId ? 'Editar Conta a Receber' : 'Nova Venda'} size="lg">
+        title={editId ? 'Editar Lançamento' : tipoModal === 'recebimento' ? 'Novo Recebimento' : 'Nova Venda'} size="lg"
+        footer={
+          <div className="flex gap-3">
+            <Button variant="secondary" onClick={() => setModalOpen(false)} className="flex-1">Cancelar</Button>
+            <Button onClick={save} className="flex-1">
+              {editId ? 'Salvar' : tipoModal === 'recebimento'
+                ? (form.recorrente && form.parcelas > 1 ? `Criar ${form.parcelas} recebimentos` : 'Registrar recebimento')
+                : (allEntries.length > 1 ? `Criar ${allEntries.length} lançamentos` : 'Adicionar venda')}
+            </Button>
+          </div>
+        }>
         <div className="space-y-5">
 
-          {/* Pessoa */}
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-semibold text-slate-600">Pessoa (cliente/fornecedor)</label>
-              <button type="button" onClick={() => { setQuickPessoa(v => !v); setQuickProduto(false) }}
-                className={`flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full transition-colors
-                  ${quickPessoa ? 'bg-blue-100 text-blue-700' : 'text-blue-500 hover:bg-blue-50'}`}>
-                {quickPessoa ? <X size={11} /> : <UserPlus size={11} />}
-                {quickPessoa ? 'Cancelar' : 'Nova pessoa'}
+          {/* ── Toggle Recebimento / Venda ── */}
+          {!editId && (
+            <div className="flex rounded-xl bg-slate-100 p-1">
+              <button type="button" onClick={() => { setTipoModal('recebimento'); setErros({}) }}
+                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${tipoModal === 'recebimento' ? 'bg-white shadow text-emerald-700' : 'text-slate-500 hover:text-slate-700'}`}>
+                Recebimento
+              </button>
+              <button type="button" onClick={() => { setTipoModal('venda'); setErros({}) }}
+                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${tipoModal === 'venda' ? 'bg-white shadow text-emerald-700' : 'text-slate-500 hover:text-slate-700'}`}>
+                Venda
               </button>
             </div>
-            <select value={form.pessoaId} onChange={e => f('pessoaId', e.target.value)}
-              className="fi">
-              <option value="">Selecione a pessoa</option>
-              {pessoas.filter(p => p.ativa && (p.tipo === 'cliente' || p.tipo === 'ambos')).map(p => (
-                <option key={p.id} value={p.id}>{p.nome}</option>
-              ))}
-            </select>
+          )}
+
+          {/* ── De quem? (comum aos dois modos) ── */}
+          <div>
+            <PessoaCombobox
+              pessoas={pessoas}
+              value={form.pessoaId}
+              onChange={id => f('pessoaId', id)}
+              label="De quem? *"
+              placeholder="Buscar cliente..."
+              tipoFiltro={['cliente', 'ambos']}
+              onQuickAdd={(nome) => { setQuickPessoa(true); setQuickProduto(false); setQpNome(nome ?? '') }}
+              quickAddLabel={quickPessoa ? 'Cancelar' : 'Nova pessoa'}
+              error={erros.pessoaId}
+            />
             {pessoaSelecionada?.telefone && !quickPessoa && (
-              <div className="text-xs text-slate-400 mt-1">?? {pessoaSelecionada.telefone}</div>
+              <div className="text-xs text-slate-400 mt-1.5">{pessoaSelecionada.telefone}</div>
             )}
             {quickPessoa && (
               <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-xl space-y-2">
@@ -739,214 +820,278 @@ export function ContasReceber() {
             )}
           </div>
 
-          {/* Itens da venda */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-semibold text-slate-600">
-                Itens da venda
-                {form.itens.length > 1 && (
-                  <span className="ml-2 font-normal text-slate-400">
-                    ({form.itens.filter(it => it.valor > 0).length} produto(s) ? {formatCurrency(totalItens)})
-                  </span>
-                )}
-              </label>
-              <div className="flex items-center gap-2">
-                {!editId && (
-                  <button type="button" onClick={() => { setQuickProduto(v => !v); setQuickPessoa(false) }}
-                    className={`flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full transition-colors
-                      ${quickProduto ? 'bg-indigo-100 text-indigo-700' : 'text-indigo-600 hover:bg-indigo-50'}`}>
-                    {quickProduto ? <X size={11} /> : <Package size={11} />}
-                    {quickProduto ? 'Cancelar' : 'Novo produto'}
-                  </button>
-                )}
-                {!editId && (
-                  <button type="button" onClick={addItemVenda}
-                    className="flex items-center gap-1 text-xs font-medium text-emerald-600 hover:bg-emerald-50 px-2 py-0.5 rounded-full transition-colors">
-                    <Plus size={11} /> Adicionar item
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {quickProduto && (
-              <div className="mb-3 p-3 bg-indigo-50 border border-indigo-200 rounded-xl space-y-2">
-                <div className="text-xs font-semibold text-indigo-700 flex items-center gap-1">
-                  <Package size={12} /> Cadastrar novo produto
-                </div>
-                <input value={qprNome} onChange={e => setQprNome(e.target.value)} placeholder="Nome do produto *" autoFocus
-                  className="w-full border border-indigo-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-indigo-400 bg-white" />
-                <div className="grid grid-cols-2 gap-2">
-                  <select value={qprFonteId} onChange={e => setQprFonteId(e.target.value)}
-                    className="border border-indigo-200 rounded-lg px-2 py-1.5 text-sm bg-white outline-none">
-                    <option value="">Selecione a fonte</option>
-                    {fonteRendaCategorias.filter(f => f.ativa).map(f => (
-                      <option key={f.id} value={f.id}>{f.nome}</option>
-                    ))}
-                  </select>
-                  <input type="number" value={qprPreco} onChange={e => setQprPreco(parseFloat(e.target.value) || '')}
-                    placeholder="Preço base"
-                    className="border border-indigo-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-indigo-400 bg-white" />
-                </div>
-                <button type="button" onClick={salvarQuickProduto} disabled={!qprNome.trim() || !qprFonteId}
-                  className="w-full py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-40 transition-colors">
-                  Cadastrar e adicionar ? venda
-                </button>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              {form.itens.map((item, idx) => {
-                const fonte = item.fonteRendaId ? fonteRendaCategorias.find(f => f.id === item.fonteRendaId) : null
-                const prod = item.produtoId ? produtos.find(p => p.id === item.produtoId) : null
-                return (
-                  <div key={item._id} className={`p-3 rounded-xl border-2 transition-colors ${item.valor > 0 ? 'border-emerald-200 bg-emerald-50/40' : 'border-slate-200 bg-slate-50'}`}>
-                    <div className="flex items-start gap-2">
-                      <div className="flex-1 space-y-2">
-                        <select value={item.produtoId} onChange={e => updateItemVenda(idx, 'produtoId', e.target.value)}
-                          className="w-full border border-slate-200 rounded-lg px-2.5 py-2 text-sm bg-white outline-none focus:border-emerald-400">
-                          <option value="">Selecione o produto</option>
-                          {produtos.filter(p => p.ativo).map(p => {
-                            const f = fonteRendaCategorias.find(f => f.id === p.fonteRendaId)
-                            return <option key={p.id} value={p.id}>{p.nome}{f ? ` ? ${f.nome}` : ''}</option>
-                          })}
-                        </select>
-                        <div className="flex gap-2">
-                          <input value={item.descricao} onChange={e => updateItemVenda(idx, 'descricao', e.target.value)}
-                            placeholder={prod?.nome ?? 'Descrição (opcional)'}
-                            className="flex-1 border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm outline-none focus:border-emerald-400" />
-                          <div className="relative flex-shrink-0 w-32">
-                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">R$</span>
-                            <input type="number" value={item.valor || ''} onChange={e => updateItemVenda(idx, 'valor', parseFloat(e.target.value) || 0)}
-                              placeholder="0,00"
-                              className="w-full pl-8 pr-2 py-1.5 border border-slate-200 rounded-lg text-sm font-semibold text-emerald-700 outline-none focus:border-emerald-400" />
-                          </div>
-                        </div>
-                        {fonte && (
-                          <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                            <div className="w-2.5 h-2.5 rounded-full" style={{ background: fonte.cor }} />
-                            {fonte.nome}
-                          </div>
-                        )}
-                        {!item.produtoId && fonteRendaCategorias.length > 0 && (
-                          <select value={item.fonteRendaId} onChange={e => updateItemVenda(idx, 'fonteRendaId', e.target.value)}
-                            className="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs bg-white outline-none text-slate-500">
-                            <option value="">Selecione a fonte de renda</option>
-                            {fonteRendaCategorias.filter(f => f.ativa).map(f => (
-                              <option key={f.id} value={f.id}>{f.nome}</option>
-                            ))}
-                          </select>
-                        )}
-                      </div>
-                      {form.itens.length > 1 && (
-                        <button type="button" onClick={() => removeItemVenda(idx)}
-                          className="p-1.5 rounded-lg hover:bg-red-50 text-red-400 flex-shrink-0">
-                          <Trash2 size={14} />
-                        </button>
-                      )}
-                    </div>
+          {/* ════════════════════ MODO RECEBIMENTO ════════════════════ */}
+          {(tipoModal === 'recebimento' || editId) && tipoModal === 'recebimento' && (
+            <div className="space-y-4">
+              {/* Valor + Data */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5">Valor *</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">R$</span>
+                    <input type="number" value={form.valorRecebimento || ''} placeholder="0,00"
+                      onChange={e => f('valorRecebimento', parseFloat(e.target.value) || 0)}
+                      className={`fi pl-9 w-full font-semibold text-emerald-700 ${erros.valorRecebimento ? 'border-red-400 bg-red-50' : ''}`} />
                   </div>
-                )
-              })}
-            </div>
-            {form.itens.length > 1 && totalItens > 0 && (
-              <div className="mt-2 text-right">
-                <span className="text-sm font-bold text-slate-700">Total da venda: {formatCurrency(totalItens)}</span>
+                  {erros.valorRecebimento && <p className="text-xs text-red-500 mt-1">⚠ {erros.valorRecebimento}</p>}
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5">Data *</label>
+                  <input type="date" value={form.vencimento} onChange={e => f('vencimento', e.target.value)}
+                    className={`fi w-full ${erros.vencimento ? 'border-red-400 bg-red-50' : ''}`} />
+                  {erros.vencimento && <p className="text-xs text-red-500 mt-1">⚠ {erros.vencimento}</p>}
+                </div>
               </div>
-            )}
-          </div>
 
-          {/* Parcelas + Dia + Vencimento */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {!editId && (
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Parcelas</label>
-                <input type="number" min="1" max="120" value={form.parcelas}
-                  onChange={e => f('parcelas', Math.max(1, parseInt(e.target.value) || 1))}
-                  className="fi" />
-              </div>
-            )}
-            {!editId && form.parcelas > 1 && (
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Todo dia (do mês)</label>
-                <input type="number" min="1" max="28" value={form.diaPagamento}
-                  onChange={e => f('diaPagamento', Math.min(28, Math.max(1, parseInt(e.target.value) || 1)))}
-                  className="fi" />
-              </div>
-            )}
-            {(editId || form.parcelas <= 1) && (
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Vencimento</label>
-                <input type="date" value={form.vencimento} onChange={e => f('vencimento', e.target.value)}
-                  className="fi" />
-              </div>
-            )}
-          </div>
+              {/* Recorrência */}
+              <button type="button" onClick={() => f('recorrente', !form.recorrente)}
+                className={`w-full flex items-center gap-3 rounded-xl px-4 py-3 border transition-all text-left
+                  ${form.recorrente ? 'bg-emerald-50 border-emerald-300' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
+                <div className={`w-10 h-5 rounded-full flex-shrink-0 relative transition-colors ${form.recorrente ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                  <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${form.recorrente ? 'left-5' : 'left-0.5'}`} />
+                </div>
+                <div className="flex-1">
+                  <div className={`text-xs font-bold uppercase tracking-wide ${form.recorrente ? 'text-emerald-700' : 'text-slate-700'}`}>
+                    Recorrente (mensal)
+                  </div>
+                  <div className="text-[11px] text-slate-400 mt-0.5">
+                    {form.recorrente ? `Criará ${form.parcelas} lançamentos mensais` : 'Ativar para recebimentos que repetem todo mês'}
+                  </div>
+                </div>
+              </button>
+              {form.recorrente && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5">Quantas vezes?</label>
+                  <input type="number" min="2" max="120" value={form.parcelas}
+                    onChange={e => f('parcelas', Math.max(2, parseInt(e.target.value) || 2))}
+                    className="fi w-full" placeholder="Ex: 12 (1 ano)" />
+                </div>
+              )}
 
-          {/* Conta + Status */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">Conta</label>
-              <select value={form.fonte} onChange={e => f('fonte', e.target.value as FonteRenda)}
-                className="fi">
-                <option value="empresa">Empresa</option>
-                <option value="pessoal">Pessoal</option>
-              </select>
-            </div>
-            {editId && (
+              {/* Conta / Fonte de Renda */}
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Status</label>
-                <select value={form.status} onChange={e => f('status', e.target.value as StatusConta)}
-                  className="fi">
-                  {(['pendente', 'pago', 'vencido', 'parcial'] as StatusConta[]).map(s => (
-                    <option key={s} value={s}>{statusLabel[s]}</option>
-                  ))}
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5">Conta / Fonte de Renda *</label>
+                <select
+                  value={form.fonteRendaId || form.fonte}
+                  onChange={e => {
+                    const val = e.target.value
+                    if (val === 'pessoal' || val === 'empresa') { f('fonte', val as FonteRenda); f('fonteRendaId', '') }
+                    else { f('fonte', 'empresa'); f('fonteRendaId', val) }
+                  }}
+                  className={`fi w-full ${erros.fonteRendaId ? 'border-red-400 bg-red-50' : ''}`}>
+                  <option value="pessoal">Pessoal</option>
+                  {fonteRendaCategorias.filter(fc => fc.ativa).length > 0
+                    ? fonteRendaCategorias.filter(fc => fc.ativa).map(fc => (
+                        <option key={fc.id} value={fc.id}>{fc.nome}</option>
+                      ))
+                    : <option value="empresa">Empresa</option>
+                  }
                 </select>
+                {erros.fonteRendaId && <p className="text-xs text-red-500 mt-1">⚠ {erros.fonteRendaId}</p>}
               </div>
-            )}
-          </div>
 
-          {/* Observações */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">Observações</label>
-            <textarea value={form.observacoes} onChange={e => f('observacoes', e.target.value)}
-              rows={2} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-emerald-400 resize-none" />
-          </div>
-
-          {/* Preview */}
-          {showPreview && (
-            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-              <div className="text-xs font-semibold text-emerald-700 mb-2 flex items-center gap-1">
-                <CheckCircle size={12} />
-                {allEntries.length} lançamento(s) serão criados
-                {form.parcelas > 1 && <> · todo dia {form.diaPagamento} · {form.parcelas}x</>}
-              </div>
-              <div className="space-y-1.5 max-h-48 overflow-y-auto">
-                {allEntries.map((e, i) => {
-                  const fonte = e.fonteRendaId ? fonteRendaCategorias.find(f => f.id === e.fonteRendaId) : null
-                  return (
-                    <div key={i} className="flex items-center gap-2 justify-between text-xs bg-white rounded-lg px-3 py-1.5 border border-emerald-100">
-                      <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                        {fonte && <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: fonte.cor }} />}
-                        <span className="font-medium text-slate-700 truncate">{e.descricao}</span>
-                      </div>
-                      <span className="text-slate-500 flex-shrink-0">{mesesLongos[e.mes - 1]}/{e.ano} · {formatCurrency(e.valor)}</span>
-                    </div>
-                  )
-                })}
-              </div>
-              <div className="mt-2 pt-2 border-t border-emerald-100 flex justify-between text-xs font-bold text-emerald-700">
-                <span>{form.itens.filter(it => it.valor > 0).length} produto(s) ? {form.parcelas}x</span>
-                <span>Total: {formatCurrency(allEntries.reduce((s, e) => s + e.valor, 0))}</span>
+              {/* Observações */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Observações</label>
+                <textarea value={form.observacoes} onChange={e => f('observacoes', e.target.value)}
+                  rows={2} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-emerald-400 resize-none" />
               </div>
             </div>
           )}
-        </div>
 
-        <div className="flex gap-3 mt-6 pt-4 border-t border-slate-100">
-          <Button variant="secondary" onClick={() => setModalOpen(false)} className="flex-1">Cancelar</Button>
-          <Button onClick={save} className="flex-1" disabled={form.itens.filter(it => it.valor > 0).length === 0}>
-            {editId ? 'Salvar' : allEntries.length > 1 ? `Criar ${allEntries.length} lançamento(s)` : 'Adicionar'}
-          </Button>
+          {/* ════════════════════ MODO VENDA ══════════════════════════ */}
+          {(tipoModal === 'venda' || editId) && tipoModal !== 'recebimento' && (
+            <div className="space-y-4">
+              {/* Itens da venda */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-bold text-slate-600 uppercase tracking-wide">
+                    Itens da venda *
+                    {form.itens.filter(it => it.valor > 0).length > 0 && (
+                      <span className="ml-2 font-normal text-slate-400 normal-case">
+                        ({form.itens.filter(it => it.valor > 0).length} item · {formatCurrency(totalItens)})
+                      </span>
+                    )}
+                  </label>
+                  <div className="flex items-center gap-2">
+                    {!editId && (
+                      <button type="button" onClick={() => { setQuickProduto(v => !v); setQuickPessoa(false) }}
+                        className={`flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full transition-colors
+                          ${quickProduto ? 'bg-indigo-100 text-indigo-700' : 'text-indigo-600 hover:bg-indigo-50'}`}>
+                        {quickProduto ? <X size={11} /> : <Package size={11} />}
+                        {quickProduto ? 'Cancelar' : 'Novo produto'}
+                      </button>
+                    )}
+                    {!editId && (
+                      <button type="button" onClick={addItemVenda}
+                        className="flex items-center gap-1 text-xs font-medium text-emerald-600 hover:bg-emerald-50 px-2 py-0.5 rounded-full transition-colors">
+                        <Plus size={11} /> Adicionar item
+                      </button>
+                    )}
+                  </div>
+                </div>
+                {erros.itens && <p className="text-xs text-red-500 mb-2">⚠ {erros.itens}</p>}
+
+                {quickProduto && (
+                  <div className="mb-3 p-3 bg-indigo-50 border border-indigo-200 rounded-xl space-y-2">
+                    <div className="text-xs font-semibold text-indigo-700 flex items-center gap-1">
+                      <Package size={12} /> Cadastrar novo produto
+                    </div>
+                    <input value={qprNome} onChange={e => setQprNome(e.target.value)} placeholder="Nome do produto *" autoFocus
+                      className="w-full border border-indigo-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-indigo-400 bg-white" />
+                    <div className="grid grid-cols-2 gap-2">
+                      <select value={qprFonteId} onChange={e => setQprFonteId(e.target.value)}
+                        className="border border-indigo-200 rounded-lg px-2 py-1.5 text-sm bg-white outline-none">
+                        <option value="">Selecione a fonte</option>
+                        {fonteRendaCategorias.filter(f => f.ativa).map(f => (
+                          <option key={f.id} value={f.id}>{f.nome}</option>
+                        ))}
+                      </select>
+                      <input type="number" value={qprPreco} onChange={e => setQprPreco(parseFloat(e.target.value) || '')}
+                        placeholder="Preço base"
+                        className="border border-indigo-200 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-indigo-400 bg-white" />
+                    </div>
+                    <button type="button" onClick={salvarQuickProduto} disabled={!qprNome.trim() || !qprFonteId}
+                      className="w-full py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-40 transition-colors">
+                      Cadastrar e adicionar à venda
+                    </button>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  {form.itens.map((item, idx) => {
+                    const fonte = item.fonteRendaId ? fonteRendaCategorias.find(f => f.id === item.fonteRendaId) : null
+                    const prod = item.produtoId ? produtos.find(p => p.id === item.produtoId) : null
+                    return (
+                      <div key={item._id} className={`p-3 rounded-xl border-2 transition-colors ${item.valor > 0 ? 'border-emerald-200 bg-emerald-50/40' : 'border-slate-200 bg-slate-50'}`}>
+                        <div className="flex items-start gap-2">
+                          <div className="flex-1 space-y-2">
+                            <select value={item.produtoId} onChange={e => updateItemVenda(idx, 'produtoId', e.target.value)}
+                              className="w-full border border-slate-200 rounded-lg px-2.5 py-2 text-sm bg-white outline-none focus:border-emerald-400">
+                              <option value="">Selecione o produto</option>
+                              {produtos.filter(p => p.ativo).map(p => {
+                                const f = fonteRendaCategorias.find(f => f.id === p.fonteRendaId)
+                                return <option key={p.id} value={p.id}>{p.nome}{f ? ` · ${f.nome}` : ''}</option>
+                              })}
+                            </select>
+                            <div className="flex gap-2">
+                              <input value={item.descricao} onChange={e => updateItemVenda(idx, 'descricao', e.target.value)}
+                                placeholder={prod?.nome ?? 'Descrição (opcional)'}
+                                className="flex-1 border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm outline-none focus:border-emerald-400" />
+                              <div className="relative flex-shrink-0 w-32">
+                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">R$</span>
+                                <input type="number" value={item.valor || ''} onChange={e => updateItemVenda(idx, 'valor', parseFloat(e.target.value) || 0)}
+                                  placeholder="0,00"
+                                  className="w-full pl-8 pr-2 py-1.5 border border-slate-200 rounded-lg text-sm font-semibold text-emerald-700 outline-none focus:border-emerald-400" />
+                              </div>
+                            </div>
+                            {fonte && (
+                              <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                                <div className="w-2.5 h-2.5 rounded-full" style={{ background: fonte.cor }} />
+                                {fonte.nome}
+                              </div>
+                            )}
+                            {!item.produtoId && fonteRendaCategorias.length > 0 && (
+                              <select value={item.fonteRendaId} onChange={e => updateItemVenda(idx, 'fonteRendaId', e.target.value)}
+                                className="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs bg-white outline-none text-slate-500">
+                                <option value="">Selecione a fonte de renda</option>
+                                {fonteRendaCategorias.filter(f => f.ativa).map(f => (
+                                  <option key={f.id} value={f.id}>{f.nome}</option>
+                                ))}
+                              </select>
+                            )}
+                          </div>
+                          {form.itens.length > 1 && (
+                            <button type="button" onClick={() => removeItemVenda(idx)}
+                              className="p-1.5 rounded-lg hover:bg-red-50 text-red-400 flex-shrink-0">
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+                {form.itens.length > 1 && totalItens > 0 && (
+                  <div className="mt-2 text-right">
+                    <span className="text-sm font-bold text-slate-700">Total: {formatCurrency(totalItens)}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Data + Parcelas */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5">Data *</label>
+                  <input type="date" value={form.vencimento} onChange={e => f('vencimento', e.target.value)}
+                    className={`fi w-full ${erros.vencimento ? 'border-red-400 bg-red-50' : ''}`} />
+                  {erros.vencimento && <p className="text-xs text-red-500 mt-1">⚠ {erros.vencimento}</p>}
+                </div>
+                {!editId && (
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5">Parcelas</label>
+                    <input type="number" min="1" max="120" value={form.parcelas}
+                      onChange={e => f('parcelas', Math.max(1, parseInt(e.target.value) || 1))}
+                      className="fi w-full" />
+                  </div>
+                )}
+                {!editId && form.parcelas > 1 && (
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5">Todo dia</label>
+                    <input type="number" min="1" max="28" value={form.diaPagamento}
+                      onChange={e => f('diaPagamento', Math.min(28, Math.max(1, parseInt(e.target.value) || 1)))}
+                      className="fi w-full" />
+                  </div>
+                )}
+                {editId && (
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">Status</label>
+                    <select value={form.status} onChange={e => f('status', e.target.value as StatusConta)} className="fi">
+                      {(['pendente', 'pago', 'vencido', 'parcial'] as StatusConta[]).map(s => (
+                        <option key={s} value={s}>{statusLabel[s]}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              {/* Observações */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Observações</label>
+                <textarea value={form.observacoes} onChange={e => f('observacoes', e.target.value)}
+                  rows={2} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-emerald-400 resize-none" />
+              </div>
+
+              {/* Preview */}
+              {showPreview && (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                  <div className="text-xs font-semibold text-emerald-700 mb-2 flex items-center gap-1">
+                    <CheckCircle size={12} />
+                    {allEntries.length} lançamento(s) serão criados
+                    {form.parcelas > 1 && <> · todo dia {form.diaPagamento} · {form.parcelas}x</>}
+                  </div>
+                  <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                    {allEntries.map((e, i) => {
+                      const fonte = e.fonteRendaId ? fonteRendaCategorias.find(f => f.id === e.fonteRendaId) : null
+                      return (
+                        <div key={i} className="flex items-center gap-2 justify-between text-xs bg-white rounded-lg px-3 py-1.5 border border-emerald-100">
+                          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                            {fonte && <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: fonte.cor }} />}
+                            <span className="font-medium text-slate-700 truncate">{e.descricao}</span>
+                          </div>
+                          <span className="text-slate-500 flex-shrink-0">{mesesLongos[e.mes - 1]}/{e.ano} · {formatCurrency(e.valor)}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <div className="mt-2 pt-2 border-t border-emerald-100 flex justify-between text-xs font-bold text-emerald-700">
+                    <span>{form.itens.filter(it => it.valor > 0).length} produto(s) · {form.parcelas}x</span>
+                    <span>Total: {formatCurrency(allEntries.reduce((s, e) => s + e.valor, 0))}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </Modal>
 

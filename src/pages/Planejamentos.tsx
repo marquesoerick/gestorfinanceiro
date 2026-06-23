@@ -7,7 +7,15 @@ import { calcTotalMeses } from '../utils/helpers'
 import { Card } from '../components/ui/Card'
 import { Modal } from '../components/ui/Modal'
 import { Button } from '../components/ui/Button'
-import type { Planejamento, TipoPlano, FonteRenda } from '../types'
+import type { Planejamento, TipoPlano, FonteRenda, GrupoGasto } from '../types'
+
+const tipoPlanoToGrupo: Record<TipoPlano, GrupoGasto> = {
+  reserva_emergencia: 'reserva_emergencia',
+  compra_carro: 'carro',
+  viagem: 'viagens',
+  aposentadoria: 'aposentadoria',
+  outros: 'outros',
+}
 
 const tipoOpcoes: { value: TipoPlano; label: string; icone: string }[] = [
   { value: 'reserva_emergencia', label: 'Reserva de Emergência', icone: '🛡️' },
@@ -80,7 +88,7 @@ export function Planejamentos() {
             valor: a.valor,
             vencimento: a.vencimento,
             status: 'pendente',
-            grupo: 'outros',
+            grupo: tipoPlanoToGrupo[form.tipo] ?? 'outros',
             fonte: form.fonte,
             categoria: 'Planejamento',
             prioridade: 'media',

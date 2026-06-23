@@ -34,7 +34,7 @@ export interface Produto {
 }
 export type StatusConta = 'pendente' | 'pago' | 'vencido' | 'parcial'
 export type StatusDivida = 'ativa' | 'quitada' | 'renegociada'
-export type GrupoGasto = 'casa' | 'carro' | 'viagens' | 'alimentacao' | 'saude' | 'educacao' | 'lazer' | 'outros'
+export type GrupoGasto = 'casa' | 'carro' | 'viagens' | 'alimentacao' | 'saude' | 'educacao' | 'lazer' | 'outros' | 'reserva_emergencia' | 'aposentadoria' | 'divida'
 export type TipoPlano = 'reserva_emergencia' | 'compra_carro' | 'viagem' | 'aposentadoria' | 'outros'
 export type StatusConciliacao = 'conciliado' | 'pendente' | 'divergente'
 export type Prioridade = 'alta' | 'media' | 'baixa'
@@ -115,6 +115,7 @@ export interface Divida {
   id: string
   descricao: string
   credor: string
+  pessoaId?: string
   valorOriginal: number
   valorAtual: number
   taxaJuros: number

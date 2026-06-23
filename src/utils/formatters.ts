@@ -21,6 +21,9 @@ export const grupoLabel: Record<string, string> = {
   educacao: 'Educação',
   lazer: 'Lazer',
   outros: 'Outros',
+  reserva_emergencia: 'Reserva de Emergência',
+  aposentadoria: 'Aposentadoria',
+  divida: 'Dívida',
 }
 
 export const statusLabel: Record<string, string> = {
@@ -62,6 +65,9 @@ export const grupoColor: Record<string, string> = {
   educacao: 'bg-purple-100 text-purple-700',
   lazer: 'bg-pink-100 text-pink-700',
   outros: 'bg-gray-100 text-gray-700',
+  reserva_emergencia: 'bg-emerald-100 text-emerald-700',
+  aposentadoria: 'bg-indigo-100 text-indigo-700',
+  divida: 'bg-rose-100 text-rose-700',
 }
 
 export const isVencido = (vencimento: string): boolean => {
