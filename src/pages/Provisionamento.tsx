@@ -1,12 +1,12 @@
 import { useMemo } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { useFinanceStore } from '../store/useFinanceStore'
-import { formatCurrency, formatDate, meses, mesesLongos } from '../utils/formatters'
+import { formatCurrency, formatDate, meses, mesesLongos, grupoLabel } from '../utils/formatters'
 import { getMesRef, getAnoRef } from '../utils/helpers'
 import { Card } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge'
 import { MesNavigator } from '../components/ui/MesNavigator'
-import { TrendingUp, TrendingDown, BarChart3, DollarSign } from 'lucide-react'
+import { TrendingUp, TrendingDown, Target } from 'lucide-react'
 
 export function Provisionamento() {
   const {
@@ -14,6 +14,7 @@ export function Provisionamento() {
     contasPagar,
     contasReceber,
     fonteRendaCategorias,
+    pessoas,
     mesAtivo,
     anoAtivo,
   } = useFinanceStore()
@@ -24,23 +25,28 @@ export function Provisionamento() {
 
   // --- KPIs ---
   const kpis = useMemo(() => {
-    const receitaRealizada = contasReceber
-      .filter(c => c.status === 'pago' && isCurrentPeriod(c.vencimento, c.mesReferencia, c.anoReferencia))
+    const contasReceberMes = contasReceber
+      .filter(c => isCurrentPeriod(c.vencimento, c.mesReferencia, c.anoReferencia))
+
+    const contasPagarMes = contasPagar
+      .filter(c => isCurrentPeriod(c.vencimento, c.mesReferencia, c.anoReferencia))
+
+    // Total comprometido do mês (todas as contas a receber, independente de status)
+    const totalAReceber = contasReceberMes.reduce((s, c) => s + c.valor, 0)
+
+    // Total comprometido do mês (todas as contas a pagar, independente de status)
+    const totalAPagar = contasPagarMes.reduce((s, c) => s + c.valor, 0)
+
+    // O que já entrou de fato no mês
+    const jaRecebido = contasReceberMes
+      .filter(c => c.status === 'pago')
       .reduce((s, c) => s + (c.valorRecebido ?? c.valor), 0)
 
-    const despesasTotal = contasPagar
-      .filter(c => isCurrentPeriod(c.vencimento, c.mesReferencia, c.anoReferencia))
-      .reduce((s, c) => s + c.valor, 0)
-
-    const aReceber = contasReceber
-      .filter(c => c.status === 'pendente' && isCurrentPeriod(c.vencimento, c.mesReferencia, c.anoReferencia))
-      .reduce((s, c) => s + c.valor, 0)
-
     return {
-      receitaRealizada,
-      despesasTotal,
-      resultado: receitaRealizada - despesasTotal,
-      aReceber,
+      aReceber: totalAReceber,
+      aPagar: totalAPagar,
+      resultado: totalAReceber - totalAPagar,
+      jaRecebido,
     }
   }, [contasPagar, contasReceber, mesAtivo, anoAtivo])
 
@@ -157,48 +163,41 @@ export function Provisionamento() {
         <MesNavigator />
       </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* KPIs — Provisionamento do mês */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-4">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-3">
             <div className="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center">
               <TrendingUp size={15} className="text-emerald-600" />
             </div>
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Prev. A Receber</span>
           </div>
-          <div className="text-base sm:text-xl font-bold text-emerald-700 truncate">{formatCurrency(kpis.receitaRealizada)}</div>
-          <div className="text-xs text-slate-400 mt-0.5">Receita do mês</div>
+          <div className="text-xl sm:text-2xl font-bold text-emerald-700 truncate">{formatCurrency(kpis.aReceber)}</div>
+          <div className="text-xs text-slate-400 mt-1">Total de contas a receber no mês</div>
         </Card>
 
         <Card className="p-4">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-3">
             <div className="w-8 h-8 rounded-xl bg-red-100 flex items-center justify-center">
               <TrendingDown size={15} className="text-red-600" />
             </div>
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Prev. A Pagar</span>
           </div>
-          <div className="text-base sm:text-xl font-bold text-red-700 truncate">{formatCurrency(kpis.despesasTotal)}</div>
-          <div className="text-xs text-slate-400 mt-0.5">Despesas do mês</div>
+          <div className="text-xl sm:text-2xl font-bold text-red-700 truncate">{formatCurrency(kpis.aPagar)}</div>
+          <div className="text-xs text-slate-400 mt-1">Total de contas a pagar no mês</div>
         </Card>
 
-        <Card className="p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${kpis.resultado >= 0 ? 'bg-green-100' : 'bg-red-100'}`}>
-              <BarChart3 size={15} className={kpis.resultado >= 0 ? 'text-green-600' : 'text-red-600'} />
+        <Card className={`p-4 border-2 ${kpis.resultado >= 0 ? 'border-emerald-200 bg-emerald-50/40' : 'border-red-200 bg-red-50/40'}`}>
+          <div className="flex items-center gap-2 mb-3">
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${kpis.resultado >= 0 ? 'bg-emerald-100' : 'bg-red-100'}`}>
+              <Target size={15} className={kpis.resultado >= 0 ? 'text-emerald-600' : 'text-red-600'} />
             </div>
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Resultado Provisionado</span>
           </div>
-          <div className={`text-base sm:text-xl font-bold truncate ${kpis.resultado >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+          <div className={`text-xl sm:text-2xl font-bold truncate ${kpis.resultado >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
             {kpis.resultado >= 0 ? '+' : ''}{formatCurrency(kpis.resultado)}
           </div>
-          <div className="text-xs text-slate-400 mt-0.5">Resultado</div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 rounded-xl bg-indigo-100 flex items-center justify-center">
-              <DollarSign size={15} className="text-indigo-600" />
-            </div>
-          </div>
-          <div className="text-base sm:text-xl font-bold text-indigo-700 truncate">{formatCurrency(kpis.aReceber)}</div>
-          <div className="text-xs text-slate-400 mt-0.5">A receber</div>
+          <div className="text-xs text-slate-400 mt-1">A receber − A pagar</div>
         </Card>
       </div>
 
@@ -398,14 +397,18 @@ export function Provisionamento() {
                   hoje.setHours(0, 0, 0, 0)
                   const venc = new Date(c.vencimento + 'T00:00:00')
                   const vencido = venc < hoje
+                  const pessoa = c.pessoaId ? pessoas.find(p => p.id === c.pessoaId) : null
+                  const nomeLabel = pessoa?.nome ?? c.fornecedor ?? null
                   return (
                     <tr key={c.id} className="hover:bg-slate-50">
                       <td className="px-5 py-3">
+                        {nomeLabel && (
+                          <div className="text-xs font-semibold text-indigo-600 mb-0.5">{nomeLabel}</div>
+                        )}
                         <div className="font-medium text-slate-700">{c.descricao}</div>
-                        {c.fornecedor && <div className="text-xs text-slate-400">{c.fornecedor}</div>}
                       </td>
                       <td className="px-3 py-3 hidden sm:table-cell">
-                        <Badge className="bg-slate-100 text-slate-600 capitalize">{c.grupo}</Badge>
+                        <Badge className="bg-slate-100 text-slate-600">{grupoLabel[c.grupo] ?? c.grupo}</Badge>
                       </td>
                       <td className="px-3 py-3 text-center">
                         <span className={`text-xs font-medium ${vencido ? 'text-red-600' : 'text-slate-600'}`}>
