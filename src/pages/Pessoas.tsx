@@ -367,7 +367,7 @@ export function Pessoas() {
                       <input type="number" step="0.01" min="0"
                         value={pagarValorConta || ''}
                         onChange={e => setPagarValorConta(parseFloat(e.target.value) || 0)}
-                        className="w-full pl-9 pr-3 py-2 border border-emerald-300 rounded-lg text-sm font-bold text-emerald-800 outline-none focus:border-emerald-500 bg-white" />
+                        className="w-full pl-9 pr-3 py-2 border border-emerald-300 rounded-lg text-[16px] sm:text-sm font-bold text-emerald-800 outline-none focus:border-emerald-500 bg-white" />
                     </div>
                     <div className="flex gap-1.5 mt-1.5">
                       <button onClick={() => setPagarValorConta(totalEmAbertoConta)}

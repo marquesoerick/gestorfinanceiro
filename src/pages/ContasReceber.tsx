@@ -987,12 +987,12 @@ export function ContasReceber() {
                             <div className="flex gap-2">
                               <input value={item.descricao} onChange={e => updateItemVenda(idx, 'descricao', e.target.value)}
                                 placeholder={prod?.nome ?? 'Descrição (opcional)'}
-                                className="flex-1 border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm outline-none focus:border-emerald-400" />
+                                className="flex-1 border border-slate-200 rounded-lg px-2.5 py-1.5 text-[16px] sm:text-sm outline-none focus:border-emerald-400" />
                               <div className="relative flex-shrink-0 w-32">
                                 <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">R$</span>
                                 <input type="number" value={item.valor || ''} onChange={e => updateItemVenda(idx, 'valor', parseFloat(e.target.value) || 0)}
                                   placeholder="0,00"
-                                  className="w-full pl-8 pr-2 py-1.5 border border-slate-200 rounded-lg text-sm font-semibold text-emerald-700 outline-none focus:border-emerald-400" />
+                                  className="w-full pl-8 pr-2 py-1.5 border border-slate-200 rounded-lg text-[16px] sm:text-sm font-semibold text-emerald-700 outline-none focus:border-emerald-400" />
                               </div>
                             </div>
                             {fonte && (

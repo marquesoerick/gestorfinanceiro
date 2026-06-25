@@ -52,30 +52,32 @@ button, a { touch-action: manipulation; -webkit-tap-highlight-color: transparent
 /* Safe area iOS */
 .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
 
-/* Global form controls */
-.fi {
-  width: 100%;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 10px 14px;
-  /* 16px prevents iOS auto-zoom on focus */
-  font-size: 16px;
-  font-family: inherit;
-  background: #f8fafc;
-  color: #1e293b;
-  outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
-  -webkit-appearance: none;
-  appearance: none;
-}
+/* Global form controls — in @layer components so Tailwind utilities (pl-*, w-*, etc.) can override */
+@layer components {
+  .fi {
+    width: 100%;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 10px 14px;
+    /* 16px prevents iOS auto-zoom on focus */
+    font-size: 16px;
+    font-family: inherit;
+    background: #f8fafc;
+    color: #1e293b;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
 
-@media (min-width: 640px) {
-  .fi { font-size: 14px; }
+  @media (min-width: 640px) {
+    .fi { font-size: 14px; }
+  }
+  .fi:focus {
+    border-color: #34d399;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.12);
+  }
+  .fi:disabled { opacity: 0.6; cursor: not-allowed; }
+  .fi::placeholder { color: #94a3b8; }
 }
-.fi:focus {
-  border-color: #34d399;
-  background: #fff;
-  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.12);
-}
-.fi:disabled { opacity: 0.6; cursor: not-allowed; }
-.fi::placeholder { color: #94a3b8; }
