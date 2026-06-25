@@ -81,6 +81,7 @@ export function Dividas() {
   // Raw inputs for the smart calculator
   const [inputParcelas, setInputParcelas] = useState('')
   const [inputValorMensal, setInputValorMensal] = useState('')
+  const [erros, setErros] = useState<Record<string, string>>({})
 
   // ── KPIs ──────────────────────────────────────────────────────────────────
   const totalDividas = useMemo(
@@ -167,6 +168,7 @@ export function Dividas() {
     setCalcMode('parcelas')
     setInputParcelas('')
     setInputValorMensal('')
+    setErros({})
     setModalOpen(true)
   }
 
@@ -200,12 +202,24 @@ export function Dividas() {
 
   // ── Save ───────────────────────────────────────────────────────────────────
   const save = () => {
-    if (!form.descricao || !form.valorOriginal) return
-    if (!form.parcelas || !form.valorParcela) return
+    const novosErros: Record<string, string> = {}
+    if (!form.descricao.trim()) novosErros.descricao = 'Informe a descrição da dívida'
+    if (!form.valorOriginal || form.valorOriginal <= 0) novosErros.valorOriginal = 'Informe o valor total'
 
-    // Auto-apply smart calc if user hasn't manually applied it yet
-    const parcelas = form.parcelas
-    const valorParcela = form.valorParcela
+    // Auto-apply smart calc if user hasn't manually filled the parcel fields
+    let parcelas = form.parcelas
+    let valorParcela = form.valorParcela
+    if ((!valorParcela || valorParcela <= 0 || !parcelas || parcelas <= 0) && smartCalc) {
+      parcelas = smartCalc.parcelas
+      valorParcela = Math.round(smartCalc.valorParcela * 100) / 100
+    }
+
+    if (!parcelas || parcelas <= 0) novosErros.parcelas = 'Informe o número de parcelas'
+    if (!valorParcela || valorParcela <= 0) novosErros.valorParcela = 'Informe o valor da parcela ou use a calculadora'
+
+    if (Object.keys(novosErros).length > 0) { setErros(novosErros); return }
+    setErros({})
+
     const dvenc = dataVencimentoCalc
 
     const d = {
@@ -220,11 +234,24 @@ export function Dividas() {
       updateDivida(editId, d)
     } else {
       const newId = addDivida(d)
-      if (gerarContasPagar && parcelasPreview.length > 0) {
-        parcelasPreview.forEach(p => {
+      if (gerarContasPagar) {
+        // Recompute preview with final parcelas/valorParcela (handles auto-applied calc)
+        const restantes = parcelas - (form.parcelaAtual - 1)
+        const start = new Date(form.dataInicio + 'T00:00:00')
+        const preview = Array.from({ length: restantes }, (_, i) => {
+          const paIdx = form.parcelaAtual + i
+          const dt = new Date(start.getFullYear(), start.getMonth() + i, start.getDate())
+          return {
+            descricao: `Parcela ${String(paIdx).padStart(2, '0')}/${String(parcelas).padStart(2, '0')} ${form.descricao}`,
+            vencimento: dt.toISOString().split('T')[0],
+            mes: dt.getMonth() + 1,
+            ano: dt.getFullYear(),
+          }
+        })
+        preview.forEach(p => {
           addContaPagar({
             descricao: p.descricao,
-            valor: p.valor,
+            valor: valorParcela,
             vencimento: p.vencimento,
             status: 'pendente',
             grupo: form.grupo,
@@ -509,10 +536,11 @@ export function Dividas() {
             </label>
             <input
               value={form.descricao}
-              onChange={e => f('descricao', e.target.value)}
-              className="fi"
+              onChange={e => { f('descricao', e.target.value); setErros(p => ({ ...p, descricao: '' })) }}
+              className={`fi ${erros.descricao ? 'border-red-400 bg-red-50' : ''}`}
               placeholder="Ex: Empréstimo banco, Cartão, Financiamento..."
             />
+            {erros.descricao && <p className="text-xs text-red-500 mt-1">⚠ {erros.descricao}</p>}
           </div>
 
           {/* Credor (manual fallback) */}
@@ -536,10 +564,11 @@ export function Dividas() {
             <input
               type="number"
               value={form.valorOriginal || ''}
-              onChange={e => f('valorOriginal', parseFloat(e.target.value) || 0)}
-              className="fi"
+              onChange={e => { const v = parseFloat(e.target.value); f('valorOriginal', isNaN(v) ? 0 : v); setErros(p => ({ ...p, valorOriginal: '' })) }}
+              className={`fi ${erros.valorOriginal ? 'border-red-400 bg-red-50' : ''}`}
               placeholder="0,00"
             />
+            {erros.valorOriginal && <p className="text-xs text-red-500 mt-1">⚠ {erros.valorOriginal}</p>}
           </div>
 
           {/* Taxa de Juros */}
@@ -622,12 +651,21 @@ export function Dividas() {
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
               Total de Parcelas
             </label>
-            <input
-              type="number"
-              value={form.parcelas || ''}
-              onChange={e => f('parcelas', parseInt(e.target.value) || 0)}
-              className="fi"
-            />
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => { f('parcelas', Math.max(1, form.parcelas - 1)); setErros(p => ({ ...p, parcelas: '' })) }}
+                className="w-11 h-11 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-xl font-bold text-slate-600 hover:bg-slate-50 active:bg-slate-100 touch-manipulation flex-shrink-0">
+                −
+              </button>
+              <input type="number" min="1"
+                value={form.parcelas || ''}
+                onChange={e => { const v = parseInt(e.target.value); if (!isNaN(v) && v >= 1) { f('parcelas', v); setErros(p => ({ ...p, parcelas: '' })) } }}
+                className={`fi text-center min-w-0 ${erros.parcelas ? 'border-red-400 bg-red-50' : ''}`} />
+              <button type="button" onClick={() => { f('parcelas', form.parcelas + 1); setErros(p => ({ ...p, parcelas: '' })) }}
+                className="w-11 h-11 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-xl font-bold text-slate-600 hover:bg-slate-50 active:bg-slate-100 touch-manipulation flex-shrink-0">
+                +
+              </button>
+            </div>
+            {erros.parcelas && <p className="text-xs text-red-500 mt-1">⚠ {erros.parcelas}</p>}
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
@@ -637,9 +675,11 @@ export function Dividas() {
               type="number"
               step="0.01"
               value={form.valorParcela || ''}
-              onChange={e => f('valorParcela', parseFloat(e.target.value) || 0)}
-              className="fi"
+              onChange={e => { const v = parseFloat(e.target.value); f('valorParcela', isNaN(v) ? 0 : v); setErros(p => ({ ...p, valorParcela: '' })) }}
+              className={`fi ${erros.valorParcela ? 'border-red-400 bg-red-50' : ''}`}
+              placeholder="0,00"
             />
+            {erros.valorParcela && <p className="text-xs text-red-500 mt-1">⚠ {erros.valorParcela}</p>}
           </div>
 
           {/* Parcela Atual */}
@@ -647,12 +687,20 @@ export function Dividas() {
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
               Parcela Atual
             </label>
-            <input
-              type="number"
-              value={form.parcelaAtual || ''}
-              onChange={e => f('parcelaAtual', parseInt(e.target.value) || 1)}
-              className="fi"
-            />
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => f('parcelaAtual', Math.max(1, form.parcelaAtual - 1))}
+                className="w-11 h-11 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-xl font-bold text-slate-600 hover:bg-slate-50 active:bg-slate-100 touch-manipulation flex-shrink-0">
+                −
+              </button>
+              <input type="number" min="1"
+                value={form.parcelaAtual || ''}
+                onChange={e => { const v = parseInt(e.target.value); if (!isNaN(v) && v >= 1) f('parcelaAtual', v) }}
+                className="fi text-center min-w-0" />
+              <button type="button" onClick={() => f('parcelaAtual', form.parcelaAtual + 1)}
+                className="w-11 h-11 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-xl font-bold text-slate-600 hover:bg-slate-50 active:bg-slate-100 touch-manipulation flex-shrink-0">
+                +
+              </button>
+            </div>
           </div>
 
           {/* Data 1ª parcela */}
