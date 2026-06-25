@@ -20,7 +20,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         {Icon && <Icon size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />}
         <input
           ref={ref}
-          className={`w-full border rounded-xl px-3 py-2.5 text-sm outline-none transition-all
+          className={`w-full border rounded-xl px-3 py-2.5 text-[16px] sm:text-sm outline-none transition-all
             bg-slate-50 border-slate-200
             focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100
             placeholder:text-slate-400
@@ -54,7 +54,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
       )}
       <select
         ref={ref}
-        className={`w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none transition-all
+        className={`w-full border border-slate-200 rounded-xl px-3 py-2.5 text-[16px] sm:text-sm outline-none transition-all
           bg-slate-50 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100
           disabled:opacity-60 disabled:cursor-not-allowed
           ${className}`}
@@ -83,7 +83,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       )}
       <textarea
         ref={ref}
-        className={`w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none transition-all
+        className={`w-full border border-slate-200 rounded-xl px-3 py-2.5 text-[16px] sm:text-sm outline-none transition-all
           bg-slate-50 focus:bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100
           resize-none placeholder:text-slate-400
           ${className}`}

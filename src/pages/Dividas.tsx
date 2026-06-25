@@ -277,7 +277,7 @@ export function Dividas() {
             </div>
             <div className="text-xs text-slate-400">Total em Dívidas</div>
           </div>
-          <div className="text-2xl font-bold text-red-600">{formatCurrency(totalDividas)}</div>
+          <div className="text-lg sm:text-2xl font-bold text-red-600 truncate">{formatCurrency(totalDividas)}</div>
         </Card>
 
         <Card className="p-4">
@@ -287,7 +287,7 @@ export function Dividas() {
             </div>
             <div className="text-xs text-slate-400">Parcelas/Mês</div>
           </div>
-          <div className="text-2xl font-bold text-orange-600">{formatCurrency(parcelasMes)}</div>
+          <div className="text-lg sm:text-2xl font-bold text-orange-600 truncate">{formatCurrency(parcelasMes)}</div>
         </Card>
 
         <Card className="p-4">
@@ -297,7 +297,7 @@ export function Dividas() {
             </div>
             <div className="text-xs text-slate-400">% Médio Quitado</div>
           </div>
-          <div className="text-2xl font-bold text-blue-600">{mediaPctQuitado.toFixed(1)}%</div>
+          <div className="text-lg sm:text-2xl font-bold text-blue-600">{mediaPctQuitado.toFixed(1)}%</div>
           {dividas.filter(d => d.status === 'ativa').length > 0 && (
             <div className="mt-2 h-1.5 bg-slate-100 rounded-full overflow-hidden">
               <div className="h-full bg-blue-400 rounded-full" style={{ width: `${mediaPctQuitado}%` }} />
@@ -312,7 +312,7 @@ export function Dividas() {
             </div>
             <div className="text-xs text-slate-400">Dívidas Quitadas</div>
           </div>
-          <div className="text-2xl font-bold text-emerald-600">{quitadas}</div>
+          <div className="text-lg sm:text-2xl font-bold text-emerald-600">{quitadas}</div>
         </Card>
       </div>
 

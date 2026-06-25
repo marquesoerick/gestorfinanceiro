@@ -144,7 +144,7 @@ export function Pessoas() {
   return (
     <div className="space-y-5">
       {/* KPIs */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         <Card className="p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-slate-100 rounded-lg"><Users size={18} className="text-slate-600" /></div>
@@ -182,7 +182,7 @@ export function Pessoas() {
             <input
               value={busca} onChange={e => setBusca(e.target.value)}
               placeholder="Buscar por nome, e-mail ou telefone..."
-              className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg outline-none focus:border-emerald-400"
+              className="w-full pl-9 pr-3 py-2 text-[16px] sm:text-sm border border-slate-200 rounded-lg outline-none focus:border-emerald-400"
             />
           </div>
           <div className="flex gap-1 bg-slate-100 p-1 rounded-lg">

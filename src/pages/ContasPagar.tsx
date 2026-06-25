@@ -598,13 +598,25 @@ export function ContasPagar() {
                   {(['pendente','pago','vencido','parcial'] as StatusConta[]).map(s => <option key={s} value={s}>{statusLabel[s]}</option>)}
                 </Select>
                 {!editId && (
-                  <Input
-                    label={`Parcelas${form.parcelas && form.parcelas > 1 ? ` — ${form.parcelas}x automático` : ''}`}
-                    type="number" min="1" max="120"
-                    value={form.parcelas ?? ''}
-                    onChange={e => f('parcelas', e.target.value ? parseInt(e.target.value) : undefined)}
-                    placeholder="1 (sem parcelamento)"
-                  />
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+                      {`Parcelas${form.parcelas && form.parcelas > 1 ? ` — ${form.parcelas}x automático` : ''}`}
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <button type="button" onClick={() => f('parcelas', Math.max(1, (form.parcelas ?? 1) - 1) === 1 ? undefined : Math.max(1, (form.parcelas ?? 1) - 1))}
+                        className="w-11 h-11 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-xl font-bold text-slate-600 hover:bg-slate-50 active:bg-slate-100 touch-manipulation flex-shrink-0">
+                        −
+                      </button>
+                      <input type="number" min="1" max="120"
+                        value={form.parcelas ?? 1}
+                        onChange={e => { const v = parseInt(e.target.value); f('parcelas', !isNaN(v) && v > 1 ? Math.min(120, v) : undefined) }}
+                        className="fi text-center min-w-0" />
+                      <button type="button" onClick={() => f('parcelas', Math.min(120, (form.parcelas ?? 1) + 1))}
+                        className="w-11 h-11 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-xl font-bold text-slate-600 hover:bg-slate-50 active:bg-slate-100 touch-manipulation flex-shrink-0">
+                        +
+                      </button>
+                    </div>
+                  </div>
                 )}
                 <Textarea span2 label="Observações" value={form.observacoes ?? ''} onChange={e => f('observacoes', e.target.value)} rows={2} placeholder="Notas opcionais..." />
               </div>

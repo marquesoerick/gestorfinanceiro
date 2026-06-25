@@ -114,17 +114,17 @@ export function Conciliacao() {
       <Card className="p-4">
         <div className="flex flex-wrap items-center gap-3">
           <Filter size={16} className="text-slate-400" />
-          <select value={filtroBanco} onChange={e => setFiltroBanco(e.target.value)} className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 bg-white text-slate-700 outline-none">
+          <select value={filtroBanco} onChange={e => setFiltroBanco(e.target.value)} className="text-[16px] sm:text-sm border border-slate-200 rounded-lg px-3 py-1.5 bg-white text-slate-700 outline-none">
             <option value="todos">Todos os bancos</option>
             {bancos.map(b => <option key={b} value={b}>{b}</option>)}
           </select>
-          <select value={filtroStatus} onChange={e => setFiltroStatus(e.target.value)} className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 bg-white text-slate-700 outline-none">
+          <select value={filtroStatus} onChange={e => setFiltroStatus(e.target.value)} className="text-[16px] sm:text-sm border border-slate-200 rounded-lg px-3 py-1.5 bg-white text-slate-700 outline-none">
             <option value="todos">Todos os status</option>
             <option value="conciliado">Conciliado</option>
             <option value="pendente">Pendente</option>
             <option value="divergente">Divergente</option>
           </select>
-          <select value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)} className="text-sm border border-slate-200 rounded-lg px-3 py-1.5 bg-white text-slate-700 outline-none">
+          <select value={filtroTipo} onChange={e => setFiltroTipo(e.target.value)} className="text-[16px] sm:text-sm border border-slate-200 rounded-lg px-3 py-1.5 bg-white text-slate-700 outline-none">
             <option value="todos">Crédito + Débito</option>
             <option value="credito">Crédito</option>
             <option value="debito">Débito</option>

@@ -165,7 +165,7 @@ export function Provisionamento() {
               <TrendingUp size={15} className="text-emerald-600" />
             </div>
           </div>
-          <div className="text-xl font-bold text-emerald-700">{formatCurrency(kpis.receitaRealizada)}</div>
+          <div className="text-base sm:text-xl font-bold text-emerald-700 truncate">{formatCurrency(kpis.receitaRealizada)}</div>
           <div className="text-xs text-slate-400 mt-0.5">Receita do mês</div>
         </Card>
 
@@ -175,7 +175,7 @@ export function Provisionamento() {
               <TrendingDown size={15} className="text-red-600" />
             </div>
           </div>
-          <div className="text-xl font-bold text-red-700">{formatCurrency(kpis.despesasTotal)}</div>
+          <div className="text-base sm:text-xl font-bold text-red-700 truncate">{formatCurrency(kpis.despesasTotal)}</div>
           <div className="text-xs text-slate-400 mt-0.5">Despesas do mês</div>
         </Card>
 
@@ -185,7 +185,7 @@ export function Provisionamento() {
               <BarChart3 size={15} className={kpis.resultado >= 0 ? 'text-green-600' : 'text-red-600'} />
             </div>
           </div>
-          <div className={`text-xl font-bold ${kpis.resultado >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+          <div className={`text-base sm:text-xl font-bold truncate ${kpis.resultado >= 0 ? 'text-green-700' : 'text-red-700'}`}>
             {kpis.resultado >= 0 ? '+' : ''}{formatCurrency(kpis.resultado)}
           </div>
           <div className="text-xs text-slate-400 mt-0.5">Resultado</div>
@@ -197,7 +197,7 @@ export function Provisionamento() {
               <DollarSign size={15} className="text-indigo-600" />
             </div>
           </div>
-          <div className="text-xl font-bold text-indigo-700">{formatCurrency(kpis.aReceber)}</div>
+          <div className="text-base sm:text-xl font-bold text-indigo-700 truncate">{formatCurrency(kpis.aReceber)}</div>
           <div className="text-xs text-slate-400 mt-0.5">A receber</div>
         </Card>
       </div>

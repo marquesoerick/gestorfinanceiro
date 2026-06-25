@@ -862,9 +862,19 @@ export function ContasReceber() {
               {form.recorrente && (
                 <div>
                   <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5">Quantas vezes?</label>
-                  <input type="number" min="2" max="120" value={form.parcelas}
-                    onChange={e => f('parcelas', Math.max(2, parseInt(e.target.value) || 2))}
-                    className="fi w-full" placeholder="Ex: 12 (1 ano)" />
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => f('parcelas', Math.max(2, form.parcelas - 1))}
+                      className="w-11 h-11 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-xl font-bold text-slate-600 hover:bg-slate-50 active:bg-slate-100 touch-manipulation flex-shrink-0">
+                      −
+                    </button>
+                    <input type="number" min="2" max="120" value={form.parcelas}
+                      onChange={e => { const v = parseInt(e.target.value); if (!isNaN(v) && v >= 2) f('parcelas', Math.min(120, v)) }}
+                      className="fi text-center min-w-0" />
+                    <button type="button" onClick={() => f('parcelas', Math.min(120, form.parcelas + 1))}
+                      className="w-11 h-11 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-xl font-bold text-slate-600 hover:bg-slate-50 active:bg-slate-100 touch-manipulation flex-shrink-0">
+                      +
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -1030,17 +1040,37 @@ export function ContasReceber() {
                 {!editId && (
                   <div>
                     <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5">Parcelas</label>
-                    <input type="number" min="1" max="120" value={form.parcelas}
-                      onChange={e => f('parcelas', Math.max(1, parseInt(e.target.value) || 1))}
-                      className="fi w-full" />
+                    <div className="flex items-center gap-2">
+                      <button type="button" onClick={() => f('parcelas', Math.max(1, form.parcelas - 1))}
+                        className="w-11 h-11 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-xl font-bold text-slate-600 hover:bg-slate-50 active:bg-slate-100 touch-manipulation flex-shrink-0">
+                        −
+                      </button>
+                      <input type="number" min="1" max="120" value={form.parcelas}
+                        onChange={e => { const v = parseInt(e.target.value); if (!isNaN(v) && v >= 1) f('parcelas', Math.min(120, v)) }}
+                        className="fi text-center min-w-0" />
+                      <button type="button" onClick={() => f('parcelas', Math.min(120, form.parcelas + 1))}
+                        className="w-11 h-11 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-xl font-bold text-slate-600 hover:bg-slate-50 active:bg-slate-100 touch-manipulation flex-shrink-0">
+                        +
+                      </button>
+                    </div>
                   </div>
                 )}
                 {!editId && form.parcelas > 1 && (
                   <div>
                     <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1.5">Todo dia</label>
-                    <input type="number" min="1" max="28" value={form.diaPagamento}
-                      onChange={e => f('diaPagamento', Math.min(28, Math.max(1, parseInt(e.target.value) || 1)))}
-                      className="fi w-full" />
+                    <div className="flex items-center gap-2">
+                      <button type="button" onClick={() => f('diaPagamento', Math.max(1, form.diaPagamento - 1))}
+                        className="w-11 h-11 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-xl font-bold text-slate-600 hover:bg-slate-50 active:bg-slate-100 touch-manipulation flex-shrink-0">
+                        −
+                      </button>
+                      <input type="number" min="1" max="28" value={form.diaPagamento}
+                        onChange={e => { const v = parseInt(e.target.value); if (!isNaN(v) && v >= 1) f('diaPagamento', Math.min(28, v)) }}
+                        className="fi text-center min-w-0" />
+                      <button type="button" onClick={() => f('diaPagamento', Math.min(28, form.diaPagamento + 1))}
+                        className="w-11 h-11 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-xl font-bold text-slate-600 hover:bg-slate-50 active:bg-slate-100 touch-manipulation flex-shrink-0">
+                        +
+                      </button>
+                    </div>
                   </div>
                 )}
                 {editId && (

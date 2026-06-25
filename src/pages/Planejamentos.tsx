@@ -131,13 +131,13 @@ export function Planejamentos() {
   return (
     <div className="space-y-5">
       {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-4">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-emerald-50 rounded-lg"><Target size={18} className="text-emerald-600" /></div>
             <div className="text-xs text-slate-400">Meta Total</div>
           </div>
-          <div className="text-2xl font-bold text-slate-800">{formatCurrency(totalMeta)}</div>
+          <div className="text-lg sm:text-2xl font-bold text-slate-800 truncate">{formatCurrency(totalMeta)}</div>
           <div className="mt-2">
             <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
               <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${totalMeta > 0 ? Math.min(100, (totalAcumulado / totalMeta) * 100) : 0}%` }} />
@@ -150,14 +150,14 @@ export function Planejamentos() {
             <div className="p-2 bg-indigo-50 rounded-lg"><PiggyBank size={18} className="text-indigo-600" /></div>
             <div className="text-xs text-slate-400">Total Acumulado</div>
           </div>
-          <div className="text-2xl font-bold text-indigo-600">{formatCurrency(totalAcumulado)}</div>
+          <div className="text-lg sm:text-2xl font-bold text-indigo-600 truncate">{formatCurrency(totalAcumulado)}</div>
         </Card>
         <Card className="p-4">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-blue-50 rounded-lg"><TrendingUp size={18} className="text-blue-600" /></div>
             <div className="text-xs text-slate-400">Aportes Mensais</div>
           </div>
-          <div className="text-2xl font-bold text-blue-600">{formatCurrency(totalMensal)}</div>
+          <div className="text-lg sm:text-2xl font-bold text-blue-600 truncate">{formatCurrency(totalMensal)}</div>
           <div className="text-xs text-slate-400 mt-1">{planejamentos.filter(p => p.ativo).length} planos ativos</div>
         </Card>
       </div>

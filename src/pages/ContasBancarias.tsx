@@ -48,19 +48,19 @@ export function ContasBancarias() {
   return (
     <div className="space-y-5">
       {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-5">
           <div className="text-xs text-slate-400 mb-1">Saldo Total</div>
-          <div className="text-2xl font-bold text-slate-800">{formatCurrency(totalSaldo)}</div>
+          <div className="text-lg sm:text-2xl font-bold text-slate-800 truncate">{formatCurrency(totalSaldo)}</div>
           <div className="text-xs text-slate-400 mt-1">{contasBancarias.filter(c => c.ativa).length} contas ativas</div>
         </Card>
         <Card className="p-5">
           <div className="text-xs text-slate-400 mb-1">Empresa</div>
-          <div className="text-2xl font-bold text-indigo-600">{formatCurrency(totalEmpresa)}</div>
+          <div className="text-lg sm:text-2xl font-bold text-indigo-600 truncate">{formatCurrency(totalEmpresa)}</div>
         </Card>
         <Card className="p-5">
           <div className="text-xs text-slate-400 mb-1">Pessoal</div>
-          <div className="text-2xl font-bold text-teal-600">{formatCurrency(totalPessoal)}</div>
+          <div className="text-lg sm:text-2xl font-bold text-teal-600 truncate">{formatCurrency(totalPessoal)}</div>
         </Card>
       </div>
 
@@ -87,7 +87,7 @@ export function ContasBancarias() {
 
               <div className="mb-4">
                 <div className="text-xs text-slate-400 mb-0.5">Saldo disponível</div>
-                <div className="text-2xl font-bold" style={{ color: c.cor }}>{formatCurrency(c.saldo)}</div>
+                <div className="text-lg sm:text-2xl font-bold truncate" style={{ color: c.cor }}>{formatCurrency(c.saldo)}</div>
               </div>
 
               <div className="flex flex-wrap gap-2 text-xs text-slate-500 mb-4">

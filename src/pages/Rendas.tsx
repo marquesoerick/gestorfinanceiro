@@ -183,18 +183,18 @@ export function Rendas() {
             </div>
             <div className="text-xs text-slate-400">Total Recebido · {mesesLongos[mesAtivo - 1]}</div>
           </div>
-          <div className="text-2xl font-bold text-emerald-600">{formatCurrency(totalMes)}</div>
+          <div className="text-lg sm:text-2xl font-bold text-emerald-600 truncate">{formatCurrency(totalMes)}</div>
         </Card>
 
         <Card className="p-4">
           <div className="text-xs text-slate-400 mb-1">Fontes ativas</div>
-          <div className="text-2xl font-bold text-slate-800">{fonteRendaCategorias.filter(f => f.ativa).length}</div>
+          <div className="text-lg sm:text-2xl font-bold text-slate-800">{fonteRendaCategorias.filter(f => f.ativa).length}</div>
           <div className="text-xs text-slate-400">{produtos.filter(p => p.ativo).length} produto(s)</div>
         </Card>
 
         <Card className="p-4">
           <div className="text-xs text-slate-400 mb-1">Recebimentos no mês</div>
-          <div className="text-2xl font-bold text-indigo-600">{relatorioMes.reduce((s, r) => s + r.qtd, 0)}</div>
+          <div className="text-lg sm:text-2xl font-bold text-indigo-600">{relatorioMes.reduce((s, r) => s + r.qtd, 0)}</div>
           <div className="text-xs text-slate-400">confirmados</div>
         </Card>
 
@@ -205,7 +205,7 @@ export function Rendas() {
             </div>
             <div className="text-xs text-slate-400">Total Investido · {mesesLongos[mesAtivo - 1]}</div>
           </div>
-          <div className="text-2xl font-bold text-red-500">{formatCurrency(totalInvestidoMes)}</div>
+          <div className="text-lg sm:text-2xl font-bold text-red-500 truncate">{formatCurrency(totalInvestidoMes)}</div>
         </Card>
       </div>
 

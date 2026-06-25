@@ -529,22 +529,22 @@ export function ImportarExtrato() {
                       </td>
                       <td className="px-3 py-2.5">
                         <input type="date" value={r.data} onChange={e => editRow(r.id, 'data', e.target.value)}
-                          className="text-xs border border-slate-200 rounded px-2 py-1 outline-none focus:border-emerald-400 w-32" />
+                          className="text-[16px] sm:text-xs border border-slate-200 rounded px-2 py-1 outline-none focus:border-emerald-400 w-32" />
                       </td>
                       <td className="px-3 py-2.5">
                         <input value={r.descricao} onChange={e => editRow(r.id, 'descricao', e.target.value)}
-                          className="text-sm border border-slate-200 rounded px-2 py-1 outline-none focus:border-emerald-400 w-full min-w-48" />
+                          className="text-[16px] sm:text-sm border border-slate-200 rounded px-2 py-1 outline-none focus:border-emerald-400 w-full min-w-48" />
                         {r.confidence && r.confidence < 80 && (
                           <div className="text-xs text-amber-500 mt-0.5">⚠ Confiança baixa — revise</div>
                         )}
                       </td>
                       <td className="px-3 py-2.5 text-right">
                         <input type="number" value={r.valor} onChange={e => editRow(r.id, 'valor', parseFloat(e.target.value))}
-                          className="text-sm font-semibold border border-slate-200 rounded px-2 py-1 outline-none focus:border-emerald-400 w-28 text-right" />
+                          className="text-[16px] sm:text-sm font-semibold border border-slate-200 rounded px-2 py-1 outline-none focus:border-emerald-400 w-28 text-right" />
                       </td>
                       <td className="px-3 py-2.5 text-center">
                         <select value={r.tipo} onChange={e => editRow(r.id, 'tipo', e.target.value)}
-                          className="text-xs border border-slate-200 rounded px-2 py-1 outline-none bg-white">
+                          className="text-[16px] sm:text-xs border border-slate-200 rounded px-2 py-1 outline-none bg-white">
                           <option value="debito">Débito</option>
                           <option value="credito">Crédito</option>
                         </select>
