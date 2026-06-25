@@ -114,6 +114,23 @@ export function Planejamentos() {
 
   const f = (k: keyof typeof form, v: unknown) => setForm(prev => ({ ...prev, [k]: v }))
 
+  // Recalcula aporteMensal automaticamente quando meta/valorAtual/datas mudam
+  const updateWithRecalc = (updates: Partial<Omit<Planejamento, 'id'>>) => {
+    setForm(prev => {
+      const next = { ...prev, ...updates }
+      if (next.valorMeta > 0 && next.dataInicio && next.dataAlvo) {
+        const start = new Date(next.dataInicio + 'T00:00:00')
+        const end = new Date(next.dataAlvo + 'T00:00:00')
+        if (end > start) {
+          const meses = calcTotalMeses(start, end)
+          const falta = Math.max(0, next.valorMeta - (next.valorAtual || 0))
+          next.aporteMensal = Math.ceil(falta / meses)
+        }
+      }
+      return next
+    })
+  }
+
   const historicoChart = (p: Planejamento) => {
     let acumulado = 0
     return p.historico.map(h => {
@@ -267,28 +284,30 @@ export function Planejamentos() {
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Valor da Meta *</label>
-            <input type="number" value={form.valorMeta || ''} onChange={e => f('valorMeta', parseFloat(e.target.value))} className="fi" />
+            <input type="number" value={form.valorMeta || ''} onChange={e => updateWithRecalc({ valorMeta: parseFloat(e.target.value) || 0 })} className="fi" />
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Valor Atual</label>
-            <input type="number" value={form.valorAtual || ''} onChange={e => f('valorAtual', parseFloat(e.target.value))} className="fi" />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
-              Aporte Mensal
-              {aportePreview.length > 0 && (
-                <span className="ml-2 text-emerald-600 font-normal">→ {aportePreview.length} aportes</span>
-              )}
-            </label>
-            <input type="number" value={form.aporteMensal || ''} onChange={e => f('aporteMensal', parseFloat(e.target.value))} className="fi" />
+            <input type="number" value={form.valorAtual || ''} onChange={e => updateWithRecalc({ valorAtual: parseFloat(e.target.value) || 0 })} className="fi" />
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Data Início</label>
-            <input type="date" value={form.dataInicio} onChange={e => f('dataInicio', e.target.value)} className="fi" />
+            <input type="date" value={form.dataInicio} onChange={e => updateWithRecalc({ dataInicio: e.target.value })} className="fi" />
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Data Alvo</label>
-            <input type="date" value={form.dataAlvo} onChange={e => f('dataAlvo', e.target.value)} className="fi" />
+            <input type="date" value={form.dataAlvo} onChange={e => updateWithRecalc({ dataAlvo: e.target.value })} className="fi" />
+          </div>
+          <div className="col-span-2">
+            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+              Aporte Mensal
+              {aportePreview.length > 0 && (
+                <span className="ml-2 text-emerald-600 font-normal normal-case">
+                  → {aportePreview.length} meses · {formatCurrency(form.valorMeta > 0 ? Math.max(0, form.valorMeta - (form.valorAtual || 0)) : 0)} restante
+                </span>
+              )}
+            </label>
+            <input type="number" value={form.aporteMensal || ''} onChange={e => f('aporteMensal', parseFloat(e.target.value) || 0)} className="fi" placeholder="Calculado automaticamente pelas datas" />
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Cor</label>
