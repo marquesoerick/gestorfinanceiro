@@ -1,11 +1,11 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts'
 import {
   TrendingUp, TrendingDown, AlertCircle, CheckCircle, Wallet,
-  Target, Building2, AlertTriangle, ChevronRight, Clock, ArrowRight
+  Target, Building2, AlertTriangle, ChevronRight, Clock, ArrowRight, Calendar
 } from 'lucide-react'
 import { useFinanceStore } from '../store/useFinanceStore'
 import { formatCurrency, meses, grupoLabel } from '../utils/formatters'
@@ -14,6 +14,15 @@ import { Link } from 'react-router-dom'
 
 const COLORS = ['#10b981', '#6366f1', '#f97316', '#ec4899', '#0ea5e9', '#8b5cf6', '#f59e0b', '#84cc16']
 
+type Periodo = '1m' | '3m' | '6m' | '1a' | 'tudo'
+
+const periodoOpcoes: { value: Periodo; label: string; meses: number | null }[] = [
+  { value: '1m',   label: 'Este mês',  meses: 1  },
+  { value: '3m',   label: '3 meses',   meses: 3  },
+  { value: '6m',   label: '6 meses',   meses: 6  },
+  { value: '1a',   label: '1 ano',     meses: 12 },
+  { value: 'tudo', label: 'Tudo',      meses: null },
+]
 
 export function Dashboard() {
   const {
@@ -21,14 +30,31 @@ export function Dashboard() {
     fontesRenda, fonteRendaCategorias, contasBancarias, pessoas,
   } = useFinanceStore()
 
+  const [periodo, setPeriodo] = useState<Periodo>('6m')
+
+  const hoje = new Date(); hoje.setHours(0, 0, 0, 0)
+
+  // Date range for the selected period
+  const { dataInicio, numMeses } = useMemo(() => {
+    const opt = periodoOpcoes.find(p => p.value === periodo)!
+    if (opt.meses === null) return { dataInicio: null, numMeses: null }
+    const d = new Date(hoje.getFullYear(), hoje.getMonth() - opt.meses + 1, 1)
+    return { dataInicio: d, numMeses: opt.meses }
+  }, [periodo])
+
+  const inRange = (vencimento: string) => {
+    if (!dataInicio) return true
+    const d = new Date(vencimento + 'T00:00:00')
+    const fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0)
+    return d >= dataInicio && d <= fim
+  }
+
   const saldoTotal   = useMemo(() => contasBancarias.filter(c => c.ativa).reduce((s, c) => s + c.saldo, 0), [contasBancarias])
-  const totalPagar   = useMemo(() => contasPagar.filter(c => c.status === 'pendente' || c.status === 'vencido').reduce((s, c) => s + c.valor, 0), [contasPagar])
-  const totalReceber = useMemo(() => contasReceber.filter(c => c.status !== 'pago').reduce((s, c) => s + (c.valor - (c.valorRecebido ?? 0)), 0), [contasReceber])
+  const totalPagar   = useMemo(() => contasPagar.filter(c => (c.status === 'pendente' || c.status === 'vencido') && inRange(c.vencimento)).reduce((s, c) => s + c.valor, 0), [contasPagar, dataInicio])
+  const totalReceber = useMemo(() => contasReceber.filter(c => c.status !== 'pago' && inRange(c.vencimento)).reduce((s, c) => s + (c.valor - (c.valorRecebido ?? 0)), 0), [contasReceber, dataInicio])
   const totalDividas = useMemo(() => dividas.filter(d => d.status === 'ativa').reduce((s, d) => s + d.valorAtual, 0), [dividas])
   const rendaMensal  = useMemo(() => fontesRenda.filter(f => f.ativa && f.periodicidade === 'mensal').reduce((s, f) => s + f.valor, 0), [fontesRenda])
   const saldoLiquido = rendaMensal - totalPagar
-
-  const hoje = new Date(); hoje.setHours(0, 0, 0, 0)
 
   const parcelasAtrasadas = useMemo(() =>
     contasReceber
@@ -39,21 +65,21 @@ export function Dashboard() {
   const contasVencidas = useMemo(() => contasPagar.filter(c => c.status === 'vencido').length, [contasPagar])
 
   const fluxoData = useMemo(() => {
-    const hj = new Date()
-    return Array.from({ length: 6 }, (_, i) => {
-      const m = new Date(hj.getFullYear(), hj.getMonth() - 5 + i, 1)
+    const qtd = numMeses ?? 12
+    return Array.from({ length: qtd }, (_, i) => {
+      const m = new Date(hoje.getFullYear(), hoje.getMonth() - (qtd - 1) + i, 1)
       const mes = m.getMonth(); const ano = m.getFullYear()
       const receita = contasReceber.filter(c => { const d = new Date(c.vencimento); return d.getMonth() === mes && d.getFullYear() === ano }).reduce((s, c) => s + c.valor, 0)
       const despesa = contasPagar.filter(c => { const d = new Date(c.vencimento); return d.getMonth() === mes && d.getFullYear() === ano }).reduce((s, c) => s + c.valor, 0)
       return { mes: meses[mes].substring(0, 3), receita, despesa }
     })
-  }, [contasPagar, contasReceber])
+  }, [contasPagar, contasReceber, numMeses])
 
   const gastosPorGrupo = useMemo(() => {
     const map: Record<string, number> = {}
-    contasPagar.forEach(c => { map[c.grupo] = (map[c.grupo] ?? 0) + c.valor })
+    contasPagar.filter(c => inRange(c.vencimento)).forEach(c => { map[c.grupo] = (map[c.grupo] ?? 0) + c.valor })
     return Object.entries(map).map(([grupo, valor]) => ({ name: grupoLabel[grupo] ?? grupo, value: valor })).sort((a, b) => b.value - a.value).slice(0, 6)
-  }, [contasPagar])
+  }, [contasPagar, dataInicio])
 
   const proximosVencimentos = useMemo(() =>
     [...contasPagar].filter(c => c.status === 'pendente' || c.status === 'vencido').sort((a, b) => a.vencimento.localeCompare(b.vencimento)).slice(0, 5)
@@ -132,6 +158,28 @@ export function Dashboard() {
         </div>
       )}
 
+      {/* ── Filtro de Período ────────────────────────────────── */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 mr-1">
+          <Calendar size={13} /> Período:
+        </div>
+        <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
+          {periodoOpcoes.map(opt => (
+            <button
+              key={opt.value}
+              onClick={() => setPeriodo(opt.value)}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                periodo === opt.value
+                  ? 'bg-white text-slate-800 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* ── Hero cards ───────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-5 text-white relative overflow-hidden">
@@ -180,7 +228,7 @@ export function Dashboard() {
 
       {/* ── Gráficos ─────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <Card className="lg:col-span-2" title="Fluxo de Caixa" subtitle="Últimos 6 meses">
+        <Card className="lg:col-span-2" title="Fluxo de Caixa" subtitle={periodo === 'tudo' ? 'Últimos 12 meses' : periodoOpcoes.find(p => p.value === periodo)?.label ?? ''}>
           <div className="p-4">
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={fluxoData} margin={{ top: 4, right: 4, bottom: 0, left: -10 }}>
