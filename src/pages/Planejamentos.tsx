@@ -42,6 +42,7 @@ export function Planejamentos() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editId, setEditId] = useState<string | null>(null)
   const [form, setForm] = useState(emptyForm)
+  const [numMeses, setNumMeses] = useState(12)
   const [gerarContasPagar, setGerarContasPagar] = useState(true)
   const [aporteModal, setAporteModal] = useState<Planejamento | null>(null)
   const [valorAporte, setValorAporte] = useState('')
@@ -71,8 +72,17 @@ export function Planejamentos() {
     })
   }, [form.nome, form.aporteMensal, form.dataInicio, form.dataAlvo])
 
-  const openNew = () => { setForm(emptyForm()); setEditId(null); setGerarContasPagar(true); setModalOpen(true) }
-  const openEdit = (p: Planejamento) => { setForm({ ...p }); setEditId(p.id); setModalOpen(true) }
+  const openNew = () => { setForm(emptyForm()); setEditId(null); setNumMeses(12); setGerarContasPagar(true); setModalOpen(true) }
+  const openEdit = (p: Planejamento) => {
+    setForm({ ...p })
+    setEditId(p.id)
+    if (p.dataInicio && p.dataAlvo) {
+      const s = new Date(p.dataInicio + 'T00:00:00')
+      const e = new Date(p.dataAlvo + 'T00:00:00')
+      setNumMeses(calcTotalMeses(s, e))
+    }
+    setModalOpen(true)
+  }
 
   const save = () => {
     if (!form.nome || !form.valorMeta) return
@@ -114,21 +124,39 @@ export function Planejamentos() {
 
   const f = (k: keyof typeof form, v: unknown) => setForm(prev => ({ ...prev, [k]: v }))
 
-  // Recalcula aporteMensal automaticamente quando meta/valorAtual/datas mudam
-  const updateWithRecalc = (updates: Partial<Omit<Planejamento, 'id'>>) => {
-    setForm(prev => {
-      const next = { ...prev, ...updates }
-      if (next.valorMeta > 0 && next.dataInicio && next.dataAlvo) {
-        const start = new Date(next.dataInicio + 'T00:00:00')
-        const end = new Date(next.dataAlvo + 'T00:00:00')
-        if (end > start) {
-          const meses = calcTotalMeses(start, end)
-          const falta = Math.max(0, next.valorMeta - (next.valorAtual || 0))
-          next.aporteMensal = Math.ceil(falta / meses)
-        }
-      }
-      return next
-    })
+  // Calcula dataAlvo a partir de dataInicio + N meses
+  const calcDataAlvo = (inicio: string, meses: number) => {
+    const s = new Date(inicio + 'T00:00:00')
+    const alvo = new Date(s.getFullYear(), s.getMonth() + meses - 1, s.getDate())
+    return alvo.toISOString().split('T')[0]
+  }
+
+  // Usuário muda número de meses → recalcula aporte e dataAlvo
+  const onMesesChange = (meses: number, meta?: number, atual?: number) => {
+    const m = Math.max(1, Math.min(360, meses))
+    setNumMeses(m)
+    const falta = Math.max(0, (meta ?? form.valorMeta) - (atual ?? form.valorAtual ?? 0))
+    const aporte = m > 0 && falta > 0 ? Math.ceil(falta / m) : form.aporteMensal
+    const dataAlvo = form.dataInicio ? calcDataAlvo(form.dataInicio, m) : form.dataAlvo
+    setForm(prev => ({ ...prev, aporteMensal: aporte, dataAlvo }))
+  }
+
+  // Usuário muda aporte manualmente → recalcula número de meses e dataAlvo
+  const onAporteChange = (aporte: number) => {
+    const falta = Math.max(0, form.valorMeta - (form.valorAtual ?? 0))
+    const meses = aporte > 0 && falta > 0 ? Math.ceil(falta / aporte) : numMeses
+    setNumMeses(meses)
+    const dataAlvo = form.dataInicio ? calcDataAlvo(form.dataInicio, meses) : form.dataAlvo
+    setForm(prev => ({ ...prev, aporteMensal: aporte, dataAlvo }))
+  }
+
+  // Usuário muda meta ou valor atual → mantém numMeses e recalcula aporte
+  const onValorChange = (key: 'valorMeta' | 'valorAtual', val: number) => {
+    const meta = key === 'valorMeta' ? val : form.valorMeta
+    const atual = key === 'valorAtual' ? val : (form.valorAtual ?? 0)
+    const falta = Math.max(0, meta - atual)
+    const aporte = numMeses > 0 && falta > 0 ? Math.ceil(falta / numMeses) : form.aporteMensal
+    setForm(prev => ({ ...prev, [key]: val, aporteMensal: aporte }))
   }
 
   const historicoChart = (p: Planejamento) => {
@@ -284,30 +312,50 @@ export function Planejamentos() {
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Valor da Meta *</label>
-            <input type="number" value={form.valorMeta || ''} onChange={e => updateWithRecalc({ valorMeta: parseFloat(e.target.value) || 0 })} className="fi" />
+            <input type="number" value={form.valorMeta || ''} onChange={e => onValorChange('valorMeta', parseFloat(e.target.value) || 0)} className="fi" placeholder="R$ 0,00" />
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Valor Atual</label>
-            <input type="number" value={form.valorAtual || ''} onChange={e => updateWithRecalc({ valorAtual: parseFloat(e.target.value) || 0 })} className="fi" />
+            <input type="number" value={form.valorAtual || ''} onChange={e => onValorChange('valorAtual', parseFloat(e.target.value) || 0)} className="fi" placeholder="R$ 0,00" />
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Data Início</label>
-            <input type="date" value={form.dataInicio} onChange={e => updateWithRecalc({ dataInicio: e.target.value })} className="fi" />
+            <input type="date" value={form.dataInicio} onChange={e => {
+              const inicio = e.target.value
+              const dataAlvo = inicio ? calcDataAlvo(inicio, numMeses) : form.dataAlvo
+              setForm(prev => ({ ...prev, dataInicio: inicio, dataAlvo }))
+            }} className="fi" />
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Data Alvo</label>
-            <input type="date" value={form.dataAlvo} onChange={e => updateWithRecalc({ dataAlvo: e.target.value })} className="fi" />
+            <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+              Em quantos meses?
+              {form.dataAlvo && <span className="ml-2 text-slate-400 font-normal normal-case">até {new Date(form.dataAlvo + 'T00:00:00').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</span>}
+            </label>
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => onMesesChange(numMeses - 1)}
+                className="w-11 h-11 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-xl font-bold text-slate-600 hover:bg-slate-50 active:bg-slate-100 touch-manipulation flex-shrink-0">
+                −
+              </button>
+              <input type="number" min="1" max="360" value={numMeses}
+                onChange={e => { const v = parseInt(e.target.value); if (!isNaN(v) && v >= 1) onMesesChange(v) }}
+                className="fi text-center min-w-0" />
+              <button type="button" onClick={() => onMesesChange(numMeses + 1)}
+                className="w-11 h-11 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-xl font-bold text-slate-600 hover:bg-slate-50 active:bg-slate-100 touch-manipulation flex-shrink-0">
+                +
+              </button>
+            </div>
           </div>
           <div className="col-span-2">
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
               Aporte Mensal
-              {aportePreview.length > 0 && (
+              {form.valorMeta > 0 && (
                 <span className="ml-2 text-emerald-600 font-normal normal-case">
-                  → {aportePreview.length} meses · {formatCurrency(form.valorMeta > 0 ? Math.max(0, form.valorMeta - (form.valorAtual || 0)) : 0)} restante
+                  {formatCurrency(Math.max(0, form.valorMeta - (form.valorAtual || 0)))} em {numMeses} meses
                 </span>
               )}
             </label>
-            <input type="number" value={form.aporteMensal || ''} onChange={e => f('aporteMensal', parseFloat(e.target.value) || 0)} className="fi" placeholder="Calculado automaticamente pelas datas" />
+            <input type="number" value={form.aporteMensal || ''} onChange={e => onAporteChange(parseFloat(e.target.value) || 0)} className="fi" placeholder="Calculado automaticamente" />
+            <p className="text-xs text-slate-400 mt-1">Altere o valor para recalcular o número de meses automaticamente</p>
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Cor</label>
