@@ -72,7 +72,17 @@ export function Planejamentos() {
     })
   }, [form.nome, form.aporteMensal, form.dataInicio, form.dataAlvo])
 
-  const openNew = () => { setForm(emptyForm()); setEditId(null); setNumMeses(12); setGerarContasPagar(true); setModalOpen(true) }
+  const openNew = () => {
+    const initial = emptyForm()
+    const s = new Date(initial.dataInicio + 'T00:00:00')
+    const alvo = new Date(s.getFullYear(), s.getMonth() + 11, s.getDate())
+    initial.dataAlvo = alvo.toISOString().split('T')[0]
+    setForm(initial)
+    setEditId(null)
+    setNumMeses(12)
+    setGerarContasPagar(true)
+    setModalOpen(true)
+  }
   const openEdit = (p: Planejamento) => {
     setForm({ ...p })
     setEditId(p.id)
@@ -273,8 +283,8 @@ export function Planejamentos() {
                       <LineChart data={historicoChart(p)}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                         <XAxis dataKey="data" tick={{ fontSize: 10 }} />
-                        <YAxis tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 10 }} />
-                        <Tooltip formatter={(v) => formatCurrency(v as number)} />
+                        <YAxis tickFormatter={(v: number) => `R$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 10 }} />
+                        <Tooltip formatter={(v: number) => formatCurrency(v)} />
                         <Line type="monotone" dataKey="valor" stroke={p.cor} strokeWidth={2} dot={false} />
                       </LineChart>
                     </ResponsiveContainer>
