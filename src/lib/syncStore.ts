@@ -34,10 +34,22 @@ export async function loadFromCloud(userId: string): Promise<boolean> {
 }
 
 export async function saveToCloud(userId: string): Promise<void> {
-  const state = useFinanceStore.getState() as Record<string, unknown>
-  const snapshot: Partial<Record<SyncKey, unknown>> = {}
-  for (const key of SYNC_KEYS) {
-    snapshot[key] = state[key]
+  const state = useFinanceStore.getState()
+  const snapshot = {
+    contasPagar:           state.contasPagar,
+    contasReceber:         state.contasReceber,
+    transacoesBancarias:   state.transacoesBancarias,
+    dividas:               state.dividas,
+    planejamentos:         state.planejamentos,
+    fontesRenda:           state.fontesRenda,
+    fonteRendaCategorias:  state.fonteRendaCategorias,
+    produtos:              state.produtos,
+    pessoas:               state.pessoas,
+    provisionamentos:      state.provisionamentos,
+    contasBancarias:       state.contasBancarias,
+    mesesFechados:         state.mesesFechados,
+    mesAtivo:              state.mesAtivo,
+    anoAtivo:              state.anoAtivo,
   }
 
   await supabase.from('user_snapshots').upsert(

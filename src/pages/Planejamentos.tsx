@@ -284,7 +284,7 @@ export function Planejamentos() {
                         <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                         <XAxis dataKey="data" tick={{ fontSize: 10 }} />
                         <YAxis tickFormatter={(v: number) => `R$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 10 }} />
-                        <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                        <Tooltip formatter={(v) => formatCurrency(v as number)} />
                         <Line type="monotone" dataKey="valor" stroke={p.cor} strokeWidth={2} dot={false} />
                       </LineChart>
                     </ResponsiveContainer>
