@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/useAuthStore'
+import { useSyncStore } from './hooks/useSyncStore'
 import { Layout } from './components/Layout/Layout'
 import { Login } from './pages/Login'
 import { Dashboard } from './pages/Dashboard'
@@ -20,11 +21,13 @@ import { ResetSenha } from './pages/ResetSenha'
 
 function App() {
   const { currentUserId, initializeAuth, loading } = useAuthStore()
+  const synced = useSyncStore(currentUserId)
+
   useEffect(() => {
     initializeAuth()
   }, [initializeAuth])
 
-  if (loading) {
+  if (loading || (currentUserId && !synced)) {
     return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-emerald-500 font-bold">Carregando...</div>
   }
 
