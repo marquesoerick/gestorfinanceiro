@@ -8,18 +8,24 @@ export function useSyncStore(userId: string | null) {
   const canSave = useRef(false)
 
   useEffect(() => {
-    if (!userId) { setSynced(false); canSave.current = false; return }
+    if (!userId) {
+      setSynced(false)
+      canSave.current = false
+      return
+    }
 
     canSave.current = false
     setSynced(false)
 
-    // 1. Carrega dados da nuvem ao logar
-    loadFromCloud(userId).then(() => {
-      canSave.current = true
-      setSynced(true)
-    })
+    // Carrega da nuvem; mesmo se falhar, libera o app (fallback para localStorage)
+    loadFromCloud(userId)
+      .catch(err => console.error('[sync] loadFromCloud inesperado:', err))
+      .finally(() => {
+        canSave.current = true
+        setSynced(true)
+      })
 
-    // 2. Qualquer mudança no store → debounce de 2s → salva na nuvem
+    // Salva na nuvem 2s após qualquer mudança no store
     const unsub = useFinanceStore.subscribe(() => {
       if (!canSave.current) return
       if (saveTimer.current) clearTimeout(saveTimer.current)
